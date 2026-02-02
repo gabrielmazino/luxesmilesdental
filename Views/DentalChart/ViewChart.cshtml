@@ -1,0 +1,42 @@
+﻿@model LuxeSmilesDental.Models.DentalChart
+@{
+    ViewData["Title"] = "View Chart";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Dental Chart - @Model.Patient.FullName</h2>
+        <a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.PatientId" class="btn btn-secondary">Back to Patient</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Chart Details</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">Visit Date</dt>
+                        <dd class="col-sm-9">@Model.VisitDate.ToString("MMMM dd, yyyy")</dd>
+
+                        <dt class="col-sm-3">Created By</dt>
+                        <dd class="col-sm-9">@Model.CreatedBy</dd>
+
+                        <dt class="col-sm-3">Created At</dt>
+                        <dd class="col-sm-9">@Model.CreatedAt.ToString("MMMM dd, yyyy hh:mm tt")</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5>Dental Chart Image</h5>
+                </div>
+                <div class="card-body text-center">
+                    <img src="@Model.ImagePath" alt="Dental Chart" style="max-width: 100%; border: 1px solid #ccc;" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

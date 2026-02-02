@@ -1,0 +1,235 @@
+﻿@{
+    ViewData["Title"] = "Calendar";
+    var appointments = ViewBag.Appointments as List<LuxeSmilesDental.Models.Appointment> ?? new List<LuxeSmilesDental.Models.Appointment>();
+    int displayYear = ViewBag.DisplayYear ?? DateTime.Now.Year;
+    int displayMonth = ViewBag.DisplayMonth ?? DateTime.Now.Month;
+    string monthName = ViewBag.MonthName ?? DateTime.Now.ToString("MMMM");
+    var firstDay = new DateTime(displayYear, displayMonth, 1);
+    var daysInMonth = DateTime.DaysInMonth(displayYear, displayMonth);
+    var startDayOfWeek = (int)firstDay.DayOfWeek;
+}
+
+<div class="calendar-container">
+    <div class="inventory-header">
+        <h1>Calendar - @monthName @displayYear</h1>
+        <button class="btn-primary" onclick="showAddAppointmentModal()">Add Appointment</button>
+    </div>
+
+    <div class="calendar-navigation">
+        <a href="@Url.Action("Index", "Calendar", new { year = displayMonth == 1 ? displayYear - 1 : displayYear, month = displayMonth == 1 ? 12 : displayMonth - 1 })"
+           class="nav-arrow">◀ Previous</a>
+        <h2 style="margin: 0;">@monthName @displayYear</h2>
+        <a href="@Url.Action("Index", "Calendar", new { year = displayMonth == 12 ? displayYear + 1 : displayYear, month = displayMonth == 12 ? 1 : displayMonth + 1 })"
+           class="nav-arrow">Next ▶</a>
+    </div>
+
+    <div class="calendar-weekdays">
+        <div class="weekday">Sun</div>
+        <div class="weekday">Mon</div>
+        <div class="weekday">Tue</div>
+        <div class="weekday">Wed</div>
+        <div class="weekday">Thu</div>
+        <div class="weekday">Fri</div>
+        <div class="weekday">Sat</div>
+    </div>
+
+    <div class="calendar-days">
+        @for (int i = 0; i < startDayOfWeek; i++)
+        {
+            <div class="calendar-day"></div>
+        }
+
+        @for (int day = 1; day <= daysInMonth; day++)
+        {
+            var currentDate = new DateTime(displayYear, displayMonth, day);
+            var dayAppointments = appointments.Where(a => a.AppointmentDate.Date == currentDate.Date).ToList();
+            var hasAppointments = dayAppointments.Any();
+
+            <div class="calendar-day @(hasAppointments ? "has-appointments" : "")">
+                <div class="day-number">@day</div>
+                @if (hasAppointments)
+                {
+                    <div class="appointment-count">@dayAppointments.Count appointment(s)</div>
+                    <button class="detail-btn" onclick="showDayDetails('@currentDate.ToString("yyyy-MM-dd")')">View</button>
+                }
+                else
+                {
+                    <button class="detail-btn" onclick="showAddAppointmentForDate('@currentDate.ToString("yyyy-MM-dd")')">Add</button>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div style="width: 20px; height: 20px; background: #e8f5e9; border-radius: 4px;"></div>
+            <span>Has Appointments</span>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Appointment Modal -->
+<div id="appointmentModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeAppointmentModal()">&times;</span>
+        <h2 id="modalTitle">Add Appointment</h2>
+        <form id="appointmentForm">
+            <input type="hidden" id="appointmentId" />
+            <div class="form-group">
+                <label>Patient Name</label>
+                <input type="text" id="patientName" required />
+            </div>
+            <div class="form-group">
+                <label>Appointment Date & Time</label>
+                <input type="datetime-local" id="appointmentDate" required />
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea id="notes" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn-primary">Save</button>
+        </form>
+    </div>
+</div>
+
+<!-- Day Details Modal -->
+<div id="dayDetailsModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeDayDetailsModal()">&times;</span>
+        <h2 id="dayDetailsTitle">Appointments</h2>
+        <div id="dayDetailsContent"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var appointments = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(appointments.Select(a => new
+            {
+                appointmentId = a.AppointmentId,
+                patientName = a.PatientName,
+                appointmentDate = a.AppointmentDate.ToString("yyyy-MM-ddTHH:mm"),
+                notes = a.Notes
+            })));
+
+        function showAddAppointmentModal() {
+            document.getElementById('appointmentModal').style.display = 'block';
+            document.getElementById('modalTitle').textContent = 'Add Appointment';
+            document.getElementById('appointmentForm').reset();
+            document.getElementById('appointmentId').value = '';
+        }
+
+        function showAddAppointmentForDate(date) {
+            showAddAppointmentModal();
+            document.getElementById('appointmentDate').value = date + 'T09:00';
+        }
+
+        function closeAppointmentModal() {
+            document.getElementById('appointmentModal').style.display = 'none';
+        }
+
+        function showDayDetails(date) {
+            var dayAppts = appointments.filter(a => a.appointmentDate.startsWith(date));
+            var content = '<div class="data-table"><table style="width:100%"><thead><tr><th>Time</th><th>Patient</th><th>Notes</th><th>Actions</th></tr></thead><tbody>';
+
+            dayAppts.forEach(function(appt) {
+                var time = new Date(appt.appointmentDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                content += '<tr>';
+                content += '<td>' + time + '</td>';
+                content += '<td>' + (appt.patientName || 'N/A') + '</td>';
+                content += '<td>' + (appt.notes || 'N/A') + '</td>';
+                content += '<td>';
+                content += '<button class="icon-btn" onclick="editAppointment(' + appt.appointmentId + ')">✏️</button>';
+                content += '<button class="icon-btn" onclick="deleteAppointment(' + appt.appointmentId + ')">🗑️</button>';
+                content += '</td></tr>';
+            });
+
+            content += '</tbody></table></div>';
+            document.getElementById('dayDetailsContent').innerHTML = content;
+            document.getElementById('dayDetailsTitle').textContent = 'Appointments for ' + new Date(date).toLocaleDateString();
+            document.getElementById('dayDetailsModal').style.display = 'block';
+        }
+
+        function closeDayDetailsModal() {
+            document.getElementById('dayDetailsModal').style.display = 'none';
+        }
+
+        document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            var appointmentId = document.getElementById('appointmentId').value;
+            var data = {
+                appointmentId: appointmentId ? parseInt(appointmentId) : 0,
+                patientName: document.getElementById('patientName').value,
+                appointmentDate: document.getElementById('appointmentDate').value,
+                notes: document.getElementById('notes').value
+            };
+
+            var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            var url = appointmentId ? '@Url.Action("UpdateAppointment", "Calendar")' : '@Url.Action("CreateAppointment", "Calendar")';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Appointment saved');
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(() => alert('Network error'));
+        });
+
+        function editAppointment(id) {
+            var appt = appointments.find(a => a.appointmentId === id);
+            if (appt) {
+                document.getElementById('appointmentId').value = appt.appointmentId;
+                document.getElementById('patientName').value = appt.patientName;
+                document.getElementById('appointmentDate').value = appt.appointmentDate.substring(0, 16);
+                document.getElementById('notes').value = appt.notes || '';
+                document.getElementById('modalTitle').textContent = 'Edit Appointment';
+                closeDayDetailsModal();
+                document.getElementById('appointmentModal').style.display = 'block';
+            }
+        }
+
+        function deleteAppointment(id) {
+            if (!confirm('Delete this appointment?')) return;
+
+            var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            fetch('@Url.Action("DeleteAppointment", "Calendar")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({ id: id })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Appointment deleted');
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(() => alert('Network error'));
+        }
+
+        window.onclick = function(event) {
+            if (event.target.className === 'modal') {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+    @Html.AntiForgeryToken()
+}

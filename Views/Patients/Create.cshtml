@@ -1,0 +1,79 @@
+﻿@model LuxeSmilesDental.Models.Patient
+@{
+    ViewData["Title"] = "Create Patient";
+}
+
+<div class="patients-container">
+    <div class="inventory-header">
+        <h1>Create New Patient</h1>
+        <button class="btn-primary" onclick="window.location.href='@Url.Action("Index", "Patients")'" style="background: #999;">Back to List</button>
+    </div>
+
+    <div style="background: white; padding: 30px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); max-width: 800px;">
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <strong>⚠️ Please fix the following errors:</strong>
+                <div asp-validation-summary="All"></div>
+            </div>
+        }
+
+        <form asp-action="Create" method="post">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label asp-for="FirstName"></label>
+                    <input asp-for="FirstName" required />
+                    <span asp-validation-for="FirstName" style="color: #dc3545; font-size: 13px;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="LastName"></label>
+                    <input asp-for="LastName" required />
+                    <span asp-validation-for="LastName" style="color: #dc3545; font-size: 13px;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="ContactNumber"></label>
+                    <input asp-for="ContactNumber" />
+                    <span asp-validation-for="ContactNumber" style="color: #dc3545; font-size: 13px;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Email"></label>
+                    <input asp-for="Email" type="email" />
+                    <span asp-validation-for="Email" style="color: #dc3545; font-size: 13px;"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Address"></label>
+                <input asp-for="Address" />
+                <span asp-validation-for="Address" style="color: #dc3545; font-size: 13px;"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="BirthDate"></label>
+                <input asp-for="BirthDate" type="date" />
+                <span asp-validation-for="BirthDate" style="color: #dc3545; font-size: 13px;"></span>
+                <small style="color: #999; display: block; margin-top: 5px;">Optional - leave blank if unknown</small>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Notes"></label>
+                <textarea asp-for="Notes" placeholder="Any additional notes about the patient..."></textarea>
+                <span asp-validation-for="Notes" style="color: #dc3545; font-size: 13px;"></span>
+            </div>
+
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button type="submit" class="btn-primary">Create Patient</button>
+                <button type="button" class="btn-primary" onclick="window.location.href='@Url.Action("Index", "Patients")'" style="background: #999;">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

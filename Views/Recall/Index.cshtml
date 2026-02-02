@@ -1,0 +1,147 @@
+﻿@model IEnumerable<LuxeSmilesDental.Models.PatientRecall>
+@{
+    ViewData["Title"] = "Patient Recalls";
+    var userRole = Context.Session.GetString("Role");
+    var canDelete = userRole == "Dentist" || userRole == "Dental Assistant";
+}
+
+<div class="recall-container">
+    <div class="inventory-header">
+        <h1>Patient Recalls</h1>
+        <button class="btn-primary" onclick="window.location.href='@Url.Action("Create", "Recall")'">Add New Recall</button>
+    </div>
+
+    <div style="background: white; padding: 15px 25px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); margin-bottom: 20px;">
+        <div style="display: flex; gap: 10px;">
+            <a href="@Url.Action("Index", "Recall", new { status = "All" })"
+               class="btn-primary"
+               style="@(ViewBag.CurrentStatus == "All" ? "background: #b8d7a8;" : "background: #e0e0e0; color: #666;")">
+                All Recalls
+            </a>
+            <a href="@Url.Action("Index", "Recall", new { status = "Upcoming Recall" })"
+               class="btn-primary"
+               style="@(ViewBag.CurrentStatus == "Upcoming Recall" ? "background: #b8d7a8;" : "background: #e0e0e0; color: #666;")">
+                Upcoming
+            </a>
+            <a href="@Url.Action("Index", "Recall", new { status = "Recall Overdue" })"
+               class="btn-primary"
+               style="@(ViewBag.CurrentStatus == "Recall Overdue" ? "background: #b8d7a8;" : "background: #e0e0e0; color: #666;")">
+                Overdue
+            </a>
+        </div>
+    </div>
+
+    <div style="background: white; padding: 25px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Recall Case</th>
+                    <th>Previous Visit</th>
+                    <th>Recall Date</th>
+                    <th>Status</th>
+                    <th>Days</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    @foreach (var item in Model)
+                    {
+                        var daysUntil = (item.RecallDate - DateTime.Today).Days;
+                        var rowStyle = item.Status == "Recall Overdue" ? "background: #ffe6e6;" : (daysUntil <= 7 ? "background: #fff9e6;" : "");
+
+                        <tr style="@rowStyle">
+                            <td>
+                                <a href="@Url.Action("Details", "Patients", new { id = item.PatientId })" style="color: #b8d7a8; font-weight: 600; text-decoration: none;">
+                                    @item.Patient.FullName
+                                </a>
+                            </td>
+                            <td>@item.RecallCase</td>
+                            <td>
+                                @if (item.PreviousVisitDate.HasValue)
+                                {
+                                    @item.PreviousVisitDate.Value.ToString("MM/dd/yyyy")
+                                }
+                                else
+                                {
+                                    <span style="color: #999;">N/A</span>
+                                }
+                            </td>
+                            <td>@item.RecallDate.ToString("MM/dd/yyyy")</td>
+                            <td>
+                                @if (item.Status == "Recall Overdue")
+                                {
+                                    <span class="status-badge status-overdue">⚠ @item.Status</span>
+                                }
+                                else if (daysUntil <= 7)
+                                {
+                                    <span class="status-badge status-upcoming">⏰ Due Soon</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-instock">✓ Upcoming</span>
+                                }
+                            </td>
+                            <td>
+                                @if (daysUntil < 0)
+                                {
+                                    <span style="color: #dc3545; font-weight: 600;">@Math.Abs(daysUntil) days overdue</span>
+                                }
+                                else if (daysUntil == 0)
+                                {
+                                    <span style="color: #ffc107; font-weight: 600;">Today</span>
+                                }
+                                else
+                                {
+                                    <span style="color: #666;">@daysUntil days</span>
+                                }
+                            </td>
+                            <td>
+                                <button class="icon-btn" onclick="window.location.href='@Url.Action("Details", "Recall", new { id = item.RecallId })'" title="View Details">👁️</button>
+                                <button class="icon-btn" onclick="window.location.href='@Url.Action("Edit", "Recall", new { id = item.RecallId })'" title="Edit">✏️</button>
+                                @if (canDelete)
+                                {
+                                    <button class="icon-btn" onclick="if(confirm('Are you sure you want to delete this recall?')) window.location.href='@Url.Action("Delete", "Recall", new { id = item.RecallId })'" title="Delete">🗑️</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #999;">
+                            @if (ViewBag.CurrentStatus == "All")
+                            {
+                                <text>No patient recalls found. Click "Add New Recall" to create one.</text>
+                            }
+                            else
+                            {
+                                <text>No @ViewBag.CurrentStatus recalls found.</text>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div style="background: #e3f2fd; color: #1976d2; padding: 15px 20px; border-radius: 10px; margin-top: 20px;">
+            <strong>Legend:</strong>
+            <span class="status-badge status-overdue" style="margin-left: 10px;">Overdue</span> - Past recall date
+            <span class="status-badge status-upcoming" style="margin-left: 10px;">Soon</span> - Within 7 days
+            <span class="status-badge status-instock" style="margin-left: 10px;">Upcoming</span> - More than 7 days away
+        </div>
+    }
+
+    @if (!canDelete)
+    {
+        <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; margin-top: 20px;">
+            <strong>Note:</strong> As a Secretary, you cannot delete recalls. Contact a Dentist or Dental Assistant if deletion is required.
+        </div>
+    }
+</div>

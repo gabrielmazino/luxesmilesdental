@@ -1,0 +1,90 @@
+﻿@model LuxeSmilesDental.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="dashboard-container">
+    <h1>Dashboard</h1>
+    <p class="welcome-text">Welcome, @Context.Session.GetString("EmployeeName")</p>
+
+    <div class="stats-cards">
+        <div class="stat-card stat-green">
+            <h3>Total Patients</h3>
+            <p class="stat-number">@Model.TotalPatients</p>
+        </div>
+
+        <div class="stat-card stat-teal">
+            <h3>New Registered Patients (Today)</h3>
+            <p class="stat-number">@Model.NewRegisteredPatientsToday</p>
+        </div>
+
+        <div class="stat-card stat-blue">
+            <h3>Total Treatment Done (Today)</h3>
+            <p class="stat-number">@Model.TotalTreatmentDoneToday</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="schedule-section">
+            <h2>Today's Schedule</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Patient Name</th>
+                        <th>Operation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.TodaysSchedule.Any())
+                    {
+                        foreach (var appointment in Model.TodaysSchedule)
+                        {
+                            <tr>
+                                <td>@appointment.PatientName</td>
+                                <td>@(appointment.Notes ?? "No notes")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="2" style="text-align:center;">No appointments scheduled for today</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="recall-section">
+            <h2>Patient Recalls</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Patient Name</th>
+                        <th>Patient ID</th>
+                        <th>Recall Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.UpcomingRecalls.Any())
+                    {
+                        foreach (var recall in Model.UpcomingRecalls.Take(5))
+                        {
+                            <tr>
+                                <td>@recall.Patient.FirstName @recall.Patient.LastName</td>
+                                <td>@recall.Patient.PatientId</td>
+                                <td>@recall.RecallDate.ToString("MM/dd/yyyy")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="3" style="text-align:center;">No upcoming recalls</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,102 @@
+﻿@model IEnumerable<LuxeSmilesDental.Models.PatientRecall>
+@{
+    ViewData["Title"] = "Patient Recalls";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Recalls for @ViewBag.PatientName</h2>
+        <div>
+            <a asp-action="Create" asp-route-patientId="@ViewBag.PatientId" class="btn btn-primary">Add New Recall</a>
+            <a asp-controller="Patients" asp-action="Details" asp-route-id="@ViewBag.PatientId" class="btn btn-secondary">Back to Patient</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Recall Case</th>
+                                <th>Previous Visit</th>
+                                <th>Recall Date</th>
+                                <th>Status</th>
+                                <th>Days Until/Overdue</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                var daysUntil = (item.RecallDate - DateTime.Today).Days;
+                                var rowClass = item.Status == "Recall Overdue" ? "table-danger" : (daysUntil <= 7 ? "table-warning" : "");
+
+                                <tr class="@rowClass">
+                                    <td>@item.RecallCase</td>
+                                    <td>
+                                        @if (item.PreviousVisitDate.HasValue)
+                                        {
+                                            @item.PreviousVisitDate.Value.ToString("MM/dd/yyyy")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+                                    <td>@item.RecallDate.ToString("MM/dd/yyyy")</td>
+                                    <td>
+                                        @if (item.Status == "Recall Overdue")
+                                        {
+                                            <span class="badge bg-danger">@item.Status</span>
+                                        }
+                                        else if (daysUntil <= 7)
+                                        {
+                                            <span class="badge bg-warning text-dark">@item.Status (Soon)</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">@item.Status</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (daysUntil < 0)
+                                        {
+                                            <span class="text-danger fw-bold">@Math.Abs(daysUntil) days overdue</span>
+                                        }
+                                        else if (daysUntil == 0)
+                                        {
+                                            <span class="text-warning fw-bold">Today</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@daysUntil days</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@item.RecallId" class="btn btn-sm btn-info">Details</a>
+                                        <a asp-action="Edit" asp-route-id="@item.RecallId" class="btn btn-sm btn-warning">Edit</a>
+                                        <a asp-action="Delete" asp-route-id="@item.RecallId" class="btn btn-sm btn-danger">Delete</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                    <h5>No recalls scheduled for this patient</h5>
+                    <p class="text-muted">Click "Add New Recall" to schedule one.</p>
+                    <a asp-action="Create" asp-route-patientId="@ViewBag.PatientId" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add New Recall
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>

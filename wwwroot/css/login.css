@@ -1,0 +1,150 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.login-container {
+    display: flex;
+    height: 100vh;
+}
+
+.login-box {
+    flex: 1;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 50px;
+    overflow-y: auto; /* Allow scrolling if content is too tall */
+}
+
+.login-form-wrapper {
+    width: 100%;
+    max-width: 450px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0; /* Prevents form from shrinking */
+}
+
+.login-box h1 {
+    font-size: 42px;
+    font-weight: 600;
+    margin-bottom: 40px;
+    color: #333;
+    width: 100%;
+    text-align: center;
+}
+
+.error-message {
+    background: #ffe6e6;
+    color: #d32f2f;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 450px;
+}
+
+    .error-message ul {
+        list-style: none;
+    }
+
+form {
+    width: 100%;
+    max-width: 450px;
+}
+
+.input-field {
+    width: 100%;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    border: none;
+    background: #f5f5f5;
+    border-radius: 12px;
+    font-size: 16px;
+    color: #666;
+    transition: all 0.3s;
+}
+
+    .input-field:focus {
+        outline: none;
+        background: #ebebeb;
+    }
+
+    .input-field::placeholder {
+        color: #999;
+    }
+
+.login-btn {
+    width: 100%;
+    padding: 18px;
+    background: #b8d7a8;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 10px;
+}
+
+    .login-btn:hover {
+        background: #a5c797;
+        transform: translateY(-2px);
+    }
+
+.dental-staff-image {
+    width: 100%;
+    max-width: 700px;
+    margin-top: auto; /* This pushes the image to the bottom */
+    padding-top: 40px; /* Add space above the image - adjust this value to control position */
+}
+
+    .dental-staff-image img {
+        width: 100%;
+        height: auto;
+        border-radius: 12px;
+    }
+
+.logo-section {
+    flex: 1;
+    background: linear-gradient(135deg, #b8d7a8 0%, #a5d89a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-image {
+    max-width: 80%;
+    max-height: 80%;
+    object-fit: contain;
+}
+
+/* Legacy support for text logo - remove if not needed */
+.logo-text {
+    font-size: 120px;
+    font-weight: 700;
+    color: white;
+    text-align: center;
+    line-height: 1.1;
+    text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 1024px) {
+    .logo-section {
+        display: none;
+    }
+
+    .login-box {
+        flex: 1;
+    }
+}

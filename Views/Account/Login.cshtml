@@ -1,0 +1,39 @@
+﻿@model LuxeSmilesDental.Models.LoginViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxe Smiles Dental Center - Login</title>
+    <link href="~/css/login.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-form-wrapper">
+                <h1>Welcome to Luxe Smiles</h1>
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="error-message">
+                        @Html.ValidationSummary(false)
+                    </div>
+                }
+                <form asp-action="Login" method="post">
+                    <input type="text" asp-for="Username" placeholder="Username" class="input-field" />
+                    <input type="password" asp-for="Password" placeholder="Password" class="input-field" />
+                    <button type="submit" class="login-btn">Login</button>
+                </form>
+            </div>
+            <div class="dental-staff-image">
+                <img src="~/images/team.jpg" alt="Dental Staff" />
+            </div>
+        </div>
+        <div class="logo-section">
+            <img src="~/images/logo.png" alt="Luxe Smiles Logo" class="logo-image" />
+        </div>
+    </div>
+</body>
+</html>

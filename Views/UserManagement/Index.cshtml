@@ -1,0 +1,82 @@
+﻿@model List<LuxeSmilesDental.Models.User>
+@{
+    ViewData["Title"] = "User Management";
+}
+
+<div class="usermgmt-container">
+    <div class="usermgmt-header">
+        <h1>User Management</h1>
+        <button class="btn-primary" onclick="showAddAccountModal()">Add Account</button>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Employee Name</th>
+                <th>Username</th>
+                <th>Password</th>
+                <th>Role</th>
+                <th>Contact</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr class="@(!user.IsActive ? "inactive-user" : "")">
+                    <td>@user.EmployeeName</td>
+                    <td>@user.Username</td>
+                    <td>••••••</td>
+                    <td>@user.Role</td>
+                    <td>@user.ContactNumber</td>
+                    <td>
+                        <button class="icon-btn" onclick="editUser(@user.UserId)">✏️</button>
+                        <label class="toggle-switch">
+                            <input type="checkbox" @(user.IsActive ? "checked" : "") onchange="toggleActive(@user.UserId)" />
+                            <span class="slider"></span>
+                        </label>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Add/Edit User Modal -->
+<div id="userModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeUserModal()">&times;</span>
+        <h2 id="modalTitle">Add Account</h2>
+        <form id="userForm">
+            <input type="hidden" id="userId" />
+            <div class="form-group">
+                <label>Employee Name</label>
+                <input type="text" id="employeeName" required />
+            </div>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="username" required />
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" />
+                <small id="passwordHint" style="display:none;">Leave blank to keep current password</small>
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <select id="role" required>
+                    <option value="Dentist">Dentist</option>
+                    <option value="Secretary">Secretary</option>
+                    <option value="Dental Assistant">Dental Assistant</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Contact Number</label>
+                <input type="text" id="contactNumber" />
+            </div>
+            <button type="submit" class="btn-primary">Save</button>
+        </form>
+    </div>
+</div>
+
+<script src="~/js/usermanagement.js"></script>
