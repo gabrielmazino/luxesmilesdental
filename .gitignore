@@ -1,4 +1,4 @@
-﻿# Visual Studio
+# Visual Studio
 .vs/
 *.user
 *.suo
@@ -6,3 +6,5 @@
 # Build output
 bin/
 obj/
+
+wwwroot/uploads/

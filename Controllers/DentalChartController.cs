@@ -7,15 +7,12 @@ using System.Text.RegularExpressions;
 
 namespace LuxeSmilesDental.Controllers
 {
-    // Dentist and Dental Assistant can create/edit charts
-    // Secretary can only view
     [AuthorizeSession("Dentist", "Dental Assistant", "Secretary")]
     public class DentalChartController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private const int MaxFileSize = 5 * 1024 * 1024;
-        private static readonly string[] AllowedMimeTypes = { "image/png" };
 
         public DentalChartController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
@@ -24,7 +21,7 @@ namespace LuxeSmilesDental.Controllers
         }
 
         [HttpGet]
-        [AuthorizeSession("Dentist", "Dental Assistant")] // Secretary cannot create charts
+        [AuthorizeSession("Dentist", "Dental Assistant")]
         public async Task<IActionResult> Chart(int? id)
         {
             if (id == null || id <= 0)
@@ -52,30 +49,33 @@ namespace LuxeSmilesDental.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        [AuthorizeSession("Dentist", "Dental Assistant")] // Secretary cannot save charts
-        public async Task<IActionResult> SaveChart(int patientId, string imageData, DateTime visitDate)
+        public async Task<IActionResult> SaveChart([FromBody] SaveChartRequest request)
         {
             try
             {
-                if (patientId <= 0 || !await _context.Patients.AnyAsync(p => p.PatientId == patientId))
+                if (request == null)
+                {
+                    return Json(new { success = false, message = "Invalid request" });
+                }
+
+                if (request.PatientId <= 0 || !await _context.Patients.AnyAsync(p => p.PatientId == request.PatientId))
                 {
                     return Json(new { success = false, message = "Invalid patient" });
                 }
 
-                if (string.IsNullOrWhiteSpace(imageData) || !imageData.StartsWith("data:image/png;base64,"))
+                if (string.IsNullOrWhiteSpace(request.ImageData) || !request.ImageData.StartsWith("data:image/png;base64,"))
                 {
                     return Json(new { success = false, message = "Invalid image format" });
                 }
 
-                if (visitDate > DateTime.Now.AddDays(1) || visitDate < DateTime.Now.AddYears(-10))
+                if (request.VisitDate > DateTime.Now.AddDays(1) || request.VisitDate < DateTime.Now.AddYears(-10))
                 {
                     return Json(new { success = false, message = "Invalid visit date" });
                 }
 
                 var username = HttpContext.Session.GetString("Username") ?? "Unknown";
 
-                var base64Match = Regex.Match(imageData, @"^data:image/png;base64,([A-Za-z0-9+/=]+)$");
+                var base64Match = Regex.Match(request.ImageData, @"^data:image/png;base64,([A-Za-z0-9+/=]+)$");
                 if (!base64Match.Success)
                 {
                     return Json(new { success = false, message = "Invalid image data" });
@@ -95,7 +95,7 @@ namespace LuxeSmilesDental.Controllers
 
                 if (imageBytes.Length > MaxFileSize)
                 {
-                    return Json(new { success = false, message = "Image too large" });
+                    return Json(new { success = false, message = "Image too large (max 5MB)" });
                 }
 
                 if (imageBytes.Length < 8 ||
@@ -108,7 +108,7 @@ namespace LuxeSmilesDental.Controllers
                 string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "dentalcharts");
                 Directory.CreateDirectory(uploadsFolder);
 
-                string safeFileName = $"chart_{patientId}_{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid():N}.png";
+                string safeFileName = $"chart_{request.PatientId}_{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid():N}.png";
                 string filePath = Path.Combine(uploadsFolder, safeFileName);
 
                 if (!filePath.StartsWith(uploadsFolder))
@@ -120,9 +120,9 @@ namespace LuxeSmilesDental.Controllers
 
                 var dentalChart = new DentalChart
                 {
-                    PatientId = patientId,
+                    PatientId = request.PatientId,
                     ImagePath = $"/uploads/dentalcharts/{safeFileName}",
-                    VisitDate = visitDate,
+                    VisitDate = request.VisitDate,
                     CreatedBy = username,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -132,14 +132,14 @@ namespace LuxeSmilesDental.Controllers
 
                 return Json(new { success = true, message = "Chart saved successfully" });
             }
-            catch
+            catch (Exception ex)
             {
-                return Json(new { success = false, message = "An error occurred" });
+                Console.WriteLine($"Chart save error: {ex.Message}");
+                return Json(new { success = false, message = "An error occurred while saving" });
             }
         }
 
         [HttpGet]
-        // All roles can view history
         public async Task<IActionResult> History(int? id)
         {
             if (id == null || id <= 0)
@@ -163,7 +163,6 @@ namespace LuxeSmilesDental.Controllers
         }
 
         [HttpGet]
-        // All roles can view individual charts
         public async Task<IActionResult> ViewChart(int? id)
         {
             if (id == null || id <= 0)
@@ -171,24 +170,34 @@ namespace LuxeSmilesDental.Controllers
                 return NotFound();
             }
 
+            // Load chart with patient information
             var chart = await _context.DentalCharts
-                .Include(d => d.Patient)
-                .FirstOrDefaultAsync(d => d.ChartId == id);
+                .Where(d => d.ChartId == id)
+                .Select(d => new DentalChart
+                {
+                    ChartId = d.ChartId,
+                    PatientId = d.PatientId,
+                    ImagePath = d.ImagePath,
+                    VisitDate = d.VisitDate,
+                    CreatedBy = d.CreatedBy,
+                    CreatedAt = d.CreatedAt,
+                    Patient = d.Patient
+                })
+                .FirstOrDefaultAsync();
 
             if (chart == null)
             {
                 return NotFound();
             }
 
-            var webRoot = _webHostEnvironment.WebRootPath;
-            var fullPath = Path.Combine(webRoot, chart.ImagePath.TrimStart('/'));
-
-            if (!fullPath.StartsWith(Path.Combine(webRoot, "uploads", "dentalcharts")))
-            {
-                return NotFound();
-            }
-
             return View(chart);
         }
+    }
+
+    public class SaveChartRequest
+    {
+        public int PatientId { get; set; }
+        public string ImageData { get; set; }
+        public DateTime VisitDate { get; set; }
     }
 }

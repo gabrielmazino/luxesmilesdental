@@ -30,7 +30,7 @@
                 <option value="In Stock">In Stock</option>
                 <option value="Low">Low</option>
             </select>
-            <button type="submit" class="btn-primary">Find</button>
+            <button type="submit" class="btn-primary">Search</button>
         </form>
     </div>
 
@@ -60,15 +60,21 @@
                     <td>@item.Unit</td>
                     <td>@item.MinimumStock</td>
                     <td>@item.Supplier</td>
-                    <td><span class="status-badge @(item.Status == "Low" ? "status-low" : "status-instock")">@(item.Status == "Low" ? "⚠ Low" : "✓ In Stock")</span></td>
+                    <td>
+                        <span class="status-badge @(item.Status == "Low" ? "status-low" : "status-instock")">
+                            @(item.Status == "Low" ? "Low Stock" : "In Stock")
+                        </span>
+                    </td>
                     @if (canModify)
                     {
                         <td>
-                            <button class="icon-btn" onclick="editItem(@item.ItemId)">✏️</button>
-                            @if (userRole == "Dentist")
-                            {
-                                <button class="icon-btn" onclick="deleteItem(@item.ItemId)">🗑️</button>
-                            }
+                            <div style="display: flex; gap: 4px;">
+                                <button class="icon-btn edit-btn" onclick="editItem(@item.ItemId)">Edit</button>
+                                @if (userRole == "Dentist")
+                                {
+                                    <button class="icon-btn delete-btn" onclick="deleteItem(@item.ItemId)">Delete</button>
+                                }
+                            </div>
                         </td>
                     }
                 </tr>
@@ -130,3 +136,76 @@ else
         <strong>Note:</strong> You have read-only access to inventory. Contact a Dentist or Dental Assistant to modify items.
     </div>
 }
+
+<style>
+    .icon-btn {
+        background: var(--gray-100, #f5f5f5);
+        border: 1px solid var(--gray-300, #e0e0e0);
+        min-width: 60px;
+        height: 32px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 200ms;
+        font-size: 11px;
+        padding: 0 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+        .icon-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+    .edit-btn {
+        background: #fff3e0;
+        border-color: #ff9800;
+        color: #f57c00;
+    }
+
+        .edit-btn:hover {
+            background: #ffe0b2;
+        }
+
+    .delete-btn {
+        background: #ffebee;
+        border-color: #f44336;
+        color: #d32f2f;
+    }
+
+        .delete-btn:hover {
+            background: #ffcdd2;
+        }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+        .status-badge::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+    .status-low::before {
+        background: #ff9800;
+    }
+
+    .status-instock::before {
+        background: #4caf50;
+    }
+</style>

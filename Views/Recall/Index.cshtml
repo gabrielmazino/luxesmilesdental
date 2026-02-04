@@ -73,15 +73,15 @@
                             <td>
                                 @if (item.Status == "Recall Overdue")
                                 {
-                                    <span class="status-badge status-overdue">⚠ @item.Status</span>
+                                    <span class="status-badge status-overdue">@item.Status</span>
                                 }
                                 else if (daysUntil <= 7)
                                 {
-                                    <span class="status-badge status-upcoming">⏰ Due Soon</span>
+                                    <span class="status-badge status-upcoming">Due Soon</span>
                                 }
                                 else
                                 {
-                                    <span class="status-badge status-instock">✓ Upcoming</span>
+                                    <span class="status-badge status-instock">Upcoming</span>
                                 }
                             </td>
                             <td>
@@ -99,12 +99,14 @@
                                 }
                             </td>
                             <td>
-                                <button class="icon-btn" onclick="window.location.href='@Url.Action("Details", "Recall", new { id = item.RecallId })'" title="View Details">👁️</button>
-                                <button class="icon-btn" onclick="window.location.href='@Url.Action("Edit", "Recall", new { id = item.RecallId })'" title="Edit">✏️</button>
-                                @if (canDelete)
-                                {
-                                    <button class="icon-btn" onclick="if(confirm('Are you sure you want to delete this recall?')) window.location.href='@Url.Action("Delete", "Recall", new { id = item.RecallId })'" title="Delete">🗑️</button>
-                                }
+                                <div style="display: flex; gap: 4px;">
+                                    <button class="icon-btn view-btn" onclick="window.location.href='@Url.Action("Details", "Recall", new { id = item.RecallId })'" title="View Details">View</button>
+                                    <button class="icon-btn edit-btn" onclick="window.location.href='@Url.Action("Edit", "Recall", new { id = item.RecallId })'" title="Edit">Edit</button>
+                                    @if (canDelete)
+                                    {
+                                        <button class="icon-btn delete-btn" onclick="if(confirm('Are you sure you want to delete this recall?')) window.location.href='@Url.Action("Delete", "Recall", new { id = item.RecallId })'" title="Delete">Delete</button>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }
@@ -145,3 +147,94 @@
         </div>
     }
 </div>
+
+<style>
+    .icon-btn {
+        background: var(--gray-100, #f5f5f5);
+        border: 1px solid var(--gray-300, #e0e0e0);
+        min-width: 60px;
+        height: 32px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 200ms;
+        font-size: 11px;
+        padding: 0 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+        .icon-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+    .view-btn {
+        background: #e3f2fd;
+        border-color: #2196f3;
+        color: #1976d2;
+    }
+
+        .view-btn:hover {
+            background: #bbdefb;
+        }
+
+    .edit-btn {
+        background: #fff3e0;
+        border-color: #ff9800;
+        color: #f57c00;
+    }
+
+        .edit-btn:hover {
+            background: #ffe0b2;
+        }
+
+    .delete-btn {
+        background: #ffebee;
+        border-color: #f44336;
+        color: #d32f2f;
+    }
+
+        .delete-btn:hover {
+            background: #ffcdd2;
+        }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+        .status-badge::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+    .status-low::before {
+        background: #ff9800;
+    }
+
+    .status-instock::before {
+        background: #4caf50;
+    }
+
+    .status-overdue::before {
+        background: #f44336;
+    }
+
+    .status-upcoming::before {
+        background: #2196f3;
+    }
+</style>

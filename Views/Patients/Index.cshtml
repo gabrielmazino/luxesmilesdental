@@ -3,6 +3,7 @@
     ViewData["Title"] = "Patients";
     var userRole = Context.Session.GetString("Role");
     var canDelete = userRole == "Dentist";
+    var canCreateChart = userRole == "Dentist" || userRole == "Dental Assistant";
 }
 
 <div class="patients-container">
@@ -15,7 +16,7 @@
         <form method="get" class="filter-form">
             <input type="text" name="searchName" placeholder="Search by name" value="@Context.Request.Query["searchName"]" />
             <input type="text" name="contactNumber" placeholder="Contact number" value="@Context.Request.Query["contactNumber"]" />
-            <button type="submit" class="btn-primary">Find</button>
+            <button type="submit" class="btn-primary">Search</button>
         </form>
     </div>
 
@@ -43,16 +44,18 @@
                             <td>@(item.Address ?? "N/A")</td>
                             <td>@item.CreatedAt.ToString("MM/dd/yyyy")</td>
                             <td>
-                                <button class="icon-btn" onclick="window.location.href='@Url.Action("Details", "Patients", new { id = item.PatientId })'" title="View Details">👁️</button>
-                                <button class="icon-btn" onclick="window.location.href='@Url.Action("Edit", "Patients", new { id = item.PatientId })'" title="Edit">✏️</button>
-                                @if (userRole == "Dentist" || userRole == "Dental Assistant")
-                                {
-                                    <button class="icon-btn" onclick="window.location.href='@Url.Action("Chart", "DentalChart", new { id = item.PatientId })'" title="Dental Chart">📋</button>
-                                }
-                                @if (canDelete)
-                                {
-                                    <button class="icon-btn" onclick="if(confirm('Are you sure you want to delete this patient?')) window.location.href='@Url.Action("Delete", "Patients", new { id = item.PatientId })'" title="Delete">🗑️</button>
-                                }
+                                <div style="display: flex; gap: 4px;">
+                                    <button class="icon-btn view-btn" onclick="window.location.href='@Url.Action("Details", "Patients", new { id = item.PatientId })'" title="View Details">View</button>
+                                    <button class="icon-btn edit-btn" onclick="window.location.href='@Url.Action("Edit", "Patients", new { id = item.PatientId })'" title="Edit">Edit</button>
+                                    @if (canCreateChart)
+                                    {
+                                        <button class="icon-btn chart-btn" onclick="window.location.href='@Url.Action("Chart", "DentalChart", new { id = item.PatientId })'" title="Dental Chart">Chart</button>
+                                    }
+                                    @if (canDelete)
+                                    {
+                                        <button class="icon-btn delete-btn" onclick="if(confirm('Are you sure you want to delete this patient?')) window.location.href='@Url.Action("Delete", "Patients", new { id = item.PatientId })'" title="Delete">Delete</button>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }
@@ -69,3 +72,68 @@
         </table>
     </div>
 </div>
+
+<style>
+    .icon-btn {
+        background: var(--gray-100);
+        border: 1px solid var(--gray-300);
+        min-width: 60px;
+        height: 32px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 200ms;
+        font-size: 11px;
+        padding: 0 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+        .icon-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+    .view-btn {
+        background: #e3f2fd;
+        border-color: #2196f3;
+        color: #1976d2;
+    }
+
+        .view-btn:hover {
+            background: #bbdefb;
+        }
+
+    .edit-btn {
+        background: #fff3e0;
+        border-color: #ff9800;
+        color: #f57c00;
+    }
+
+        .edit-btn:hover {
+            background: #ffe0b2;
+        }
+
+    .delete-btn {
+        background: #ffebee;
+        border-color: #f44336;
+        color: #d32f2f;
+    }
+
+        .delete-btn:hover {
+            background: #ffcdd2;
+        }
+
+    .chart-btn {
+        background: #e8f5e9;
+        border-color: #4caf50;
+        color: #388e3c;
+    }
+
+        .chart-btn:hover {
+            background: #c8e6c9;
+        }
+</style>
