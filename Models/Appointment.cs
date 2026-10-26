@@ -7,9 +7,12 @@ namespace LuxeSmilesDental.Models
     {
         public int AppointmentId { get; set; }
 
-        [Required]
         public string PatientName { get; set; }
 
+        public int? PatientId { get; set; }
+        public Patient Patient { get; set; }
+
+        [Required(ErrorMessage = "Dentist is required")]
         public int DentistId { get; set; }
         public User Dentist { get; set; }
 

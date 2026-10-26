@@ -5,49 +5,107 @@
 <div class="chart-container">
     <div class="inventory-header">
         <h1>Dental Chart - @ViewBag.PatientName</h1>
-        <button class="btn-primary" onclick="window.location.href='@Url.Action("Details", "Patients", new { id = ViewBag.PatientId })'" style="background: #999;">Back to Patient</button>
+        <button class="btn-primary" onclick="window.location.href='@Url.Action("Details", "Patients", new { id = ViewBag.PatientId })'" style="background: #999;">
+            ← Back to Patient
+        </button>
     </div>
 
-    <div class="dashboard-grid" style="grid-template-columns: 3fr 1fr;">
-        <div style="background: white; padding: 25px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);">
-            <h2 style="color: #333; margin-bottom: 15px; font-size: 20px;">Chart Canvas</h2>
+    <!-- MAIN CONTENT GRID -->
+    <div class="dashboard-grid" style="grid-template-columns: 3.5fr 0.5fr;">
 
-            <div class="form-group" style="max-width: 200px;">
-                <label for="visitDate">Visit Date:</label>
-                <input type="date" id="visitDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+        <!-- LEFT COLUMN: DENTAL CHART + TREATMENT RECORDS -->
+        <div>
+            <!-- DENTAL CHART CANVAS -->
+            <div style="background: white; padding: 25px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); margin-bottom: 20px;">
+                <h2 style="color: #333; margin-bottom: 15px; font-size: 20px;">Dental Chart</h2>
+
+                <div class="form-group" style="max-width: 200px;">
+                    <label for="visitDate">Visit Date:</label>
+                    <input type="date" id="visitDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <button id="penBtn" class="btn-primary" style="background: var(--primary);">✏️ Pen</button>
+                    <button id="eraserBtn" class="btn-primary" style="background: #ffc107;">🧹 Eraser</button>
+                    <button id="clearBtn" class="btn-primary" style="background: #dc3545;">🗑️ Clear Canvas</button>
+                    <button id="saveChartBtn" class="btn-primary" style="background: #28a745;">💾 Save Chart Only</button>
+                </div>
+
+                <!-- CANVAS CONTAINER WITH PROPER POSITIONING -->
+                <div id="canvasContainer" style="position: relative; display: inline-block; border: 2px solid #ddd; border-radius: 8px; overflow: hidden; background: white;">
+                    <img src="~/images/dental-chart-template.jpg" alt="Dental Chart" id="dentalChartImage"
+                         style="max-width: 100%; display: block; user-select: none;"
+                         onerror="this.src='/images/dental-chart.png'; this.onerror=null;"
+                         draggable="false" />
+                    <canvas id="drawingCanvas" style="position: absolute; top: 0; left: 0; cursor: crosshair;"></canvas>
+                </div>
+
+                <div style="margin-top: 10px; padding: 12px; background: #e3f2fd; border-radius: 8px;">
+                    <p style="margin: 0; font-size: 13px; color: #1565c0;">
+                        💡 <strong>Tip:</strong> Use Pen to mark teeth, Eraser to remove marks. Save chart and treatments separately.
+                    </p>
+                </div>
             </div>
 
-            <div style="margin: 20px 0;">
-                <button id="penBtn" class="btn-primary">Pen</button>
-                <button id="eraserBtn" class="btn-primary" style="background: #ffc107;">Eraser</button>
-                <button id="clearBtn" class="btn-primary" style="background: #dc3545;">Clear</button>
-                <button id="saveBtn" class="btn-primary" style="background: #28a745;">Save Chart</button>
-            </div>
+            <!-- TREATMENT RECORDS TABLE -->
+            <div style="background: white; padding: 25px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="color: #333; margin: 0; font-size: 20px;">Treatment Record</h2>
+                    <button class="btn-primary" onclick="addTreatmentRow()" style="padding: 8px 16px; font-size: 14px;">
+                        ➕ Add Treatment
+                    </button>
+                </div>
 
-            <div style="position: relative; display: inline-block;">
-                <img src="~/images/dental-chart.png" alt="Dental Chart" id="dentalChartImage" style="max-width: 100%; border: 1px solid #ddd; display: block;" />
-                <canvas id="drawingCanvas" style="position: absolute; top: 0; left: 0; cursor: crosshair;"></canvas>
+                <div style="overflow-x: auto;">
+                    <table class="data-table treatment-table" id="treatmentTable">
+                        <thead>
+                            <tr>
+                                <th style="min-width: 120px;">Date</th>
+                                <th style="min-width: 100px;">Tooth No./s</th>
+                                <th style="min-width: 200px;">Procedure</th>
+                                <th style="min-width: 200px;">Remarks</th>
+                                <th style="min-width: 150px;">Dentist</th>
+                                <th style="min-width: 120px;">Charged</th>
+                                <th style="min-width: 120px;">Paid</th>
+                                <th style="min-width: 120px;">Balance</th>
+                                <th style="min-width: 120px;">Next Appt.</th>
+                                <th style="min-width: 80px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="treatmentTableBody">
+                            <!-- Treatment rows will be added here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 20px; text-align: right;">
+                    <button class="btn-primary" onclick="saveTreatmentRecords()" style="background: #28a745;">
+                        💾 Save Treatments Only
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div style="background: white; padding: 25px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);">
-            <h2 style="color: #333; margin-bottom: 15px; font-size: 20px;">Previous Charts</h2>
+        <!-- RIGHT COLUMN: PREVIOUS CHARTS (COMPACT) -->
+        <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);">
+            <h3 style="color: #333; margin-bottom: 15px; font-size: 16px; text-align: center;">📚 Previous</h3>
             @if (ViewBag.PreviousCharts != null && ViewBag.PreviousCharts.Count > 0)
             {
-                <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; flex-direction: column; gap: 8px; max-height: 600px; overflow-y: auto;">
                     @foreach (var chart in ViewBag.PreviousCharts)
                     {
                         <a href="@Url.Action("ViewChart", "DentalChart", new { id = chart.ChartId })"
-                           style="background: #f5f5f5; padding: 12px; border-radius: 8px; text-decoration: none; color: #333; border: 1px solid #ddd;">
-                            <div style="font-weight: 600; color: #b8d7a8;">@chart.VisitDate.ToString("MM/dd/yyyy")</div>
-                            <div style="font-size: 13px; color: #666;">By: @chart.CreatedBy</div>
+                           style="background: #f5f5f5; padding: 10px; border-radius: 6px; text-decoration: none; color: #333; border: 1px solid #ddd; transition: all 0.2s; display: block;">
+                            <div style="font-weight: 600; color: #b8d7a8; font-size: 13px; text-align: center;">📅</div>
+                            <div style="font-size: 12px; color: #666; margin-top: 4px; text-align: center;">@chart.VisitDate.ToString("MM/dd/yy")</div>
+                            <div style="font-size: 10px; color: #999; margin-top: 2px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@chart.CreatedBy</div>
                         </a>
                     }
                 </div>
             }
             else
             {
-                <p style="color: #999;">No previous charts</p>
+                <p style="color: #999; text-align: center; padding: 20px; font-size: 12px;">No previous charts</p>
             }
         </div>
     </div>
@@ -55,58 +113,128 @@
 
 @section Scripts {
     <script>
+        // ============================================================================
+        // GLOBAL VARIABLES
+        // ============================================================================
+        let currentChartId = null; // Will store the ChartId after saving the chart
+
+        // ============================================================================
+        // DENTAL CHART CANVAS - FIXED ACCURATE POSITIONING
+        // ============================================================================
         (function() {
             'use strict';
 
             const canvas = document.getElementById('drawingCanvas');
             const ctx = canvas.getContext('2d');
             const img = document.getElementById('dentalChartImage');
+            const container = document.getElementById('canvasContainer');
 
             let drawing = false;
             let currentTool = 'pen';
 
             function initCanvas() {
-                canvas.width = img.naturalWidth || img.width;
-                canvas.height = img.naturalHeight || img.height;
+                // IMPORTANT: Set canvas to match the NATURAL (original) image size
+                // This ensures 1:1 pixel mapping with no scaling issues
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+
+                // Set the DISPLAY size to match the displayed image
+                const displayWidth = img.offsetWidth;
+                const displayHeight = img.offsetHeight;
+
+                canvas.style.width = displayWidth + 'px';
+                canvas.style.height = displayHeight + 'px';
+
+                console.log('Canvas initialized:', {
+                    naturalWidth: img.naturalWidth,
+                    naturalHeight: img.naturalHeight,
+                    displayWidth: displayWidth,
+                    displayHeight: displayHeight,
+                    canvasWidth: canvas.width,
+                    canvasHeight: canvas.height
+                });
             }
 
             img.addEventListener('load', initCanvas);
             if (img.complete) initCanvas();
 
-            ctx.lineWidth = 2;
+            // Reinit on window resize
+            window.addEventListener('resize', function() {
+                const displayWidth = img.offsetWidth;
+                const displayHeight = img.offsetHeight;
+                canvas.style.width = displayWidth + 'px';
+                canvas.style.height = displayHeight + 'px';
+            });
+
+            // Drawing settings
+            ctx.lineWidth = 3;
             ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
             ctx.strokeStyle = '#FF0000';
 
+            // Update cursor based on tool
+            function updateCursor() {
+                if (currentTool === 'pen') {
+                    canvas.style.cursor = 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'20\' height=\'20\' viewBox=\'0 0 24 24\'><path fill=\'%23FF0000\' d=\'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z\'/></svg>") 2 18, crosshair';
+                } else if (currentTool === 'eraser') {
+                    canvas.style.cursor = 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\'><path fill=\'%23666\' d=\'M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 0 1-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0M4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-4.95-4.95-4.95 4.95z\'/></svg>") 12 12, pointer';
+                }
+            }
+
+            // Tool buttons
             document.getElementById('penBtn').addEventListener('click', function() {
                 currentTool = 'pen';
                 ctx.globalCompositeOperation = 'source-over';
                 ctx.strokeStyle = '#FF0000';
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 3;
+                updateCursor();
+                this.style.background = 'var(--primary)';
+                document.getElementById('eraserBtn').style.background = '#ffc107';
             });
 
             document.getElementById('eraserBtn').addEventListener('click', function() {
                 currentTool = 'eraser';
                 ctx.globalCompositeOperation = 'destination-out';
                 ctx.lineWidth = 20;
+                updateCursor();
+                this.style.background = 'var(--primary)';
+                document.getElementById('penBtn').style.background = '#b8d7a8';
             });
 
             document.getElementById('clearBtn').addEventListener('click', function() {
-                if (confirm('Clear canvas?')) {
+                if (confirm('Clear all markings on the chart?')) {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                 }
             });
 
+            // Get accurate mouse position - CRITICAL FIX
+            // Maps display coordinates to canvas coordinates
+            function getMousePos(e) {
+                const rect = canvas.getBoundingClientRect();
+
+                // Calculate the scale factor between display size and canvas size
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+
+                // Get mouse position relative to canvas display
+                const x = (e.clientX - rect.left) * scaleX;
+                const y = (e.clientY - rect.top) * scaleY;
+
+                return { x, y };
+            }
+
+            // Drawing events with ACCURATE positioning
             canvas.addEventListener('mousedown', function(e) {
                 drawing = true;
-                const rect = canvas.getBoundingClientRect();
+                const pos = getMousePos(e);
                 ctx.beginPath();
-                ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+                ctx.moveTo(pos.x, pos.y);
             });
 
             canvas.addEventListener('mousemove', function(e) {
                 if (!drawing) return;
-                const rect = canvas.getBoundingClientRect();
-                ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+                const pos = getMousePos(e);
+                ctx.lineTo(pos.x, pos.y);
                 ctx.stroke();
             });
 
@@ -116,25 +244,43 @@
             }
 
             canvas.addEventListener('mouseup', stopDrawing);
-            canvas.addEventListener('mouseout', stopDrawing);
+            canvas.addEventListener('mouseleave', stopDrawing);
 
-            document.getElementById('saveBtn').addEventListener('click', function() {
+            // Initialize cursor
+            updateCursor();
+
+            // Save chart - ACCURATE METHOD
+            document.getElementById('saveChartBtn').addEventListener('click', function() {
                 const visitDate = document.getElementById('visitDate').value;
 
                 if (!visitDate) {
-                    alert('Select visit date');
+                    alert('Please select a visit date');
                     return;
                 }
 
-                const tempCanvas = document.createElement('canvas');
-                const tempCtx = tempCanvas.getContext('2d');
-                tempCanvas.width = canvas.width;
-                tempCanvas.height = canvas.height;
+                // Create a final canvas at the ORIGINAL image size
+                const finalCanvas = document.createElement('canvas');
+                const finalCtx = finalCanvas.getContext('2d');
 
-                tempCtx.drawImage(img, 0, 0);
-                tempCtx.drawImage(canvas, 0, 0);
+                // Set to original image dimensions
+                finalCanvas.width = img.naturalWidth;
+                finalCanvas.height = img.naturalHeight;
 
-                const imageData = tempCanvas.toDataURL('image/png');
+                // Draw the original image at full resolution
+                finalCtx.drawImage(img, 0, 0, finalCanvas.width, finalCanvas.height);
+
+                // Draw the canvas markings directly (no scaling needed since canvas is already at natural size)
+                finalCtx.drawImage(canvas, 0, 0);
+
+                // Get the final image data
+                const imageData = finalCanvas.toDataURL('image/png');
+
+                console.log('Saving chart:', {
+                    finalWidth: finalCanvas.width,
+                    finalHeight: finalCanvas.height,
+                    originalWidth: img.naturalWidth,
+                    originalHeight: img.naturalHeight
+                });
 
                 const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
 
@@ -153,15 +299,195 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert('Chart saved');
-                        window.location.reload();
+                        currentChartId = data.chartId;
+                        alert('✅ Dental chart saved successfully! You can now save treatment records.');
                     } else {
-                        alert('Error: ' + (data.message || 'Unknown error'));
+                        alert('❌ Error: ' + (data.message || 'Unknown error'));
                     }
                 })
-                .catch(() => alert('Network error'));
+                .catch(() => alert('❌ Network error. Please try again.'));
             });
         })();
+
+        // ============================================================================
+        // TREATMENT RECORDS TABLE
+        // ============================================================================
+        let treatmentRowCount = 0;
+
+        function addTreatmentRow() {
+            treatmentRowCount++;
+            const tbody = document.getElementById('treatmentTableBody');
+            const row = document.createElement('tr');
+            row.id = 'treatmentRow' + treatmentRowCount;
+            row.innerHTML = `
+                <td><input type="date" class="treatment-input" name="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" /></td>
+                <td><input type="text" class="treatment-input" name="tooth" placeholder="e.g., 11,12" /></td>
+                <td><input type="text" class="treatment-input" name="procedure" placeholder="Procedure" /></td>
+                <td><input type="text" class="treatment-input" name="remarks" placeholder="Remarks" /></td>
+                <td><input type="text" class="treatment-input" name="dentist" value="@ViewBag.CurrentDentist" /></td>
+                <td><input type="number" class="treatment-input" name="charged" placeholder="0.00" step="0.01" onchange="calculateBalance(this)" /></td>
+                <td><input type="number" class="treatment-input" name="paid" placeholder="0.00" step="0.01" onchange="calculateBalance(this)" /></td>
+                <td><input type="number" class="treatment-input" name="balance" placeholder="0.00" step="0.01" readonly style="background: #f5f5f5;" /></td>
+                <td><input type="date" class="treatment-input" name="nextAppt" /></td>
+                <td style="text-align: center;">
+                    <button class="icon-btn delete-btn" onclick="deleteTreatmentRow(${treatmentRowCount})" title="Delete">
+                        ✕
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        function deleteTreatmentRow(rowId) {
+            if (confirm('Delete this treatment record?')) {
+                document.getElementById('treatmentRow' + rowId).remove();
+            }
+        }
+
+        function calculateBalance(input) {
+            const row = input.closest('tr');
+            const charged = parseFloat(row.querySelector('input[name="charged"]').value) || 0;
+            const paid = parseFloat(row.querySelector('input[name="paid"]').value) || 0;
+            const balance = charged - paid;
+            row.querySelector('input[name="balance"]').value = balance.toFixed(2);
+        }
+
+        function saveTreatmentRecords() {
+            // Check if chart has been saved first
+            if (!currentChartId) {
+                alert('Please save the dental chart first before adding treatment records.');
+                return;
+            }
+
+            const rows = document.querySelectorAll('#treatmentTableBody tr');
+            const treatments = [];
+
+            rows.forEach(row => {
+                const date = row.querySelector('input[name="date"]').value;
+                const procedure = row.querySelector('input[name="procedure"]').value;
+
+                if (date && procedure) {
+                    treatments.push({
+                        chartId: currentChartId,
+                        treatmentDate: date,
+                        toothNumbers: row.querySelector('input[name="tooth"]').value,
+                        procedure: procedure,
+                        remarks: row.querySelector('input[name="remarks"]').value,
+                        dentist: row.querySelector('input[name="dentist"]').value,
+                        amountCharged: parseFloat(row.querySelector('input[name="charged"]').value) || 0,
+                        amountPaid: parseFloat(row.querySelector('input[name="paid"]').value) || 0,
+                        balance: parseFloat(row.querySelector('input[name="balance"]').value) || 0,
+                        nextAppointment: row.querySelector('input[name="nextAppt"]').value || null
+                    });
+                }
+            });
+
+            if (treatments.length === 0) {
+                alert('Please add at least one treatment record');
+                return;
+            }
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            fetch('@Url.Action("SaveTreatmentRecords", "DentalChart")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({ treatments: treatments })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Treatment records saved successfully!');
+                    window.location.href = '@Url.Action("ViewChart", "DentalChart")/' + currentChartId;
+                } else {
+                    alert('❌ Error: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(() => alert('❌ Network error. Please try again.'));
+        }
     </script>
     @Html.AntiForgeryToken()
 }
+
+<style>
+    .dashboard-grid > div > a:hover {
+        background: #e8f5e9 !important;
+        border-color: #b8d7a8 !important;
+        transform: translateX(4px);
+    }
+
+    /* Enhanced treatment table inputs with better visibility */
+    .treatment-input {
+        width: 100%;
+        min-width: 100px;
+        padding: 10px 12px;
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+        background: white;
+        transition: all 0.2s;
+    }
+
+        .treatment-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(184, 215, 168, 0.2);
+            background: #fafffe;
+        }
+
+        .treatment-input:hover {
+            border-color: #b8d7a8;
+        }
+
+    /* Treatment table specific styling */
+    .treatment-table {
+        font-size: 14px;
+    }
+
+        .treatment-table thead th {
+            font-size: 13px;
+            white-space: nowrap;
+            padding: 14px 12px;
+        }
+
+        .treatment-table tbody td {
+            padding: 8px;
+            vertical-align: middle;
+        }
+
+        .treatment-table tbody tr {
+            background: white;
+        }
+
+            .treatment-table tbody tr:hover {
+                background: rgba(184, 215, 168, 0.05);
+            }
+
+    /* Scrollbar styling for previous charts */
+    .dashboard-grid > div:last-child > div {
+        scrollbar-width: thin;
+        scrollbar-color: #b8d7a8 #f5f5f5;
+    }
+
+        .dashboard-grid > div:last-child > div::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dashboard-grid > div:last-child > div::-webkit-scrollbar-track {
+            background: #f5f5f5;
+            border-radius: 3px;
+        }
+
+        .dashboard-grid > div:last-child > div::-webkit-scrollbar-thumb {
+            background: #b8d7a8;
+            border-radius: 3px;
+        }
+
+            .dashboard-grid > div:last-child > div::-webkit-scrollbar-thumb:hover {
+                background: #a5c797;
+            }
+</style>

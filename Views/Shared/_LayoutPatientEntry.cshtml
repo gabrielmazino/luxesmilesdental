@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Patient Information Form</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        /* Override to remove any main layout styling */
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+
+        /* Hide any potential sidebar or navigation */
+        .sidebar,
+        .main-container,
+        .top-bar,
+        nav,
+        header {
+            display: none !important;
+        }
+
+        /* Center the form */
+        .patient-form-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+        }
+
+        /* Header styling */
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 3px solid #b8d7a8;
+        }
+
+            .form-header h1 {
+                color: #2e7d32;
+                font-size: 36px;
+                margin: 0 0 16px 0;
+                font-weight: 700;
+            }
+
+            .form-header .subtitle {
+                color: #666;
+                font-size: 18px;
+            }
+
+        /* Logo area */
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+            .logo-container img {
+                max-width: 200px;
+                height: auto;
+            }
+
+        /* Instructions box */
+        .instructions-box {
+            background: linear-gradient(135deg, rgba(184, 215, 168, 0.1) 0%, rgba(184, 215, 168, 0.05) 100%);
+            border: 2px solid #b8d7a8;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 40px;
+        }
+
+            .instructions-box h3 {
+                color: #2e7d32;
+                margin: 0 0 12px 0;
+                font-size: 20px;
+            }
+
+            .instructions-box ul {
+                margin: 0;
+                padding-left: 20px;
+                color: #666;
+            }
+
+            .instructions-box li {
+                margin-bottom: 8px;
+            }
+
+        /* Security notice */
+        .security-notice {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fff3e0;
+            border: 2px solid #ff9800;
+            border-radius: 8px;
+            padding: 12px 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 9999;
+        }
+
+            .security-notice p {
+                margin: 0;
+                color: #e65100;
+                font-weight: 600;
+                font-size: 14px;
+            }
+
+        /* Make form content visible */
+        .patients-container {
+            display: block !important;
+        }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .patient-form-container {
+                padding: 20px;
+            }
+
+            .form-header h1 {
+                font-size: 28px;
+            }
+
+            .security-notice {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="patient-form-container">
+        <!-- Logo -->
+        <div class="logo-container">
+            <img src="~/images/logo.png" alt="Luxe Smiles Dental Center" />
+        </div>
+
+        <!-- Header -->
+        <div class="form-header">
+            <h1>Patient Information Record</h1>
+            <p class="subtitle">Please fill out all required fields marked with <span style="color: red;">*</span></p>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions-box">
+            <h3>Before You Begin:</h3>
+            <ul>
+                <li>Please provide accurate information to help us serve you better</li>
+                <li>All medical information is kept strictly confidential</li>
+                <li>If you're unsure about any question, please ask our staff for assistance</li>
+                <li>After submitting, please return the device to our reception</li>
+            </ul>
+        </div>
+
+        <!-- Main Content (Form) -->
+        @RenderBody()
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

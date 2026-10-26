@@ -4,12 +4,12 @@
     var daysUntil = (Model.RecallDate - DateTime.Today).Days;
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Recall Details</h2>
-        <div>
-            <a asp-action="Edit" asp-route-id="@Model.RecallId" class="btn btn-warning">Edit Recall</a>
-            <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+<div class="recall-container">
+    <div class="inventory-header">
+        <h1>Recall Details</h1>
+        <div style="display: flex; gap: 12px;">
+            <a href="@Url.Action("Edit", "Recall", new { id = Model.RecallId })" class="btn-warning">Edit Recall</a>
+            <a href="@Url.Action("Index", "Recall")" class="btn-secondary">Back to List</a>
         </div>
     </div>
 
@@ -23,7 +23,7 @@
                     <dl class="row">
                         <dt class="col-sm-4">Patient</dt>
                         <dd class="col-sm-8">
-                            <a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.PatientId">
+                            <a href="@Url.Action("Details", "Patients", new { id = Model.PatientId })" style="color: var(--secondary-teal); text-decoration: none; font-weight: 600;">
                                 @Model.Patient.FullName
                             </a>
                         </dd>
@@ -49,19 +49,16 @@
                             @if (daysUntil < 0)
                             {
                                 <br />
-
                                 <span class="text-danger">(@Math.Abs(daysUntil) days overdue)</span>
                             }
                             else if (daysUntil == 0)
                             {
                                 <br />
-
                                 <span class="text-warning fw-bold">(Today)</span>
                             }
                             else
                             {
                                 <br />
-
                                 <span class="text-success">(In @daysUntil days)</span>
                             }
                         </dd>
@@ -86,11 +83,11 @@
 
             @if (Model.Status == "Recall Overdue")
             {
-                <div class="alert alert-danger mt-3">
-                    <h5><i class="fas fa-exclamation-triangle"></i> This recall is overdue!</h5>
+                <div class="alert alert-danger">
+                    <h5>⚠️ This recall is overdue!</h5>
                     <p>The patient was scheduled to return @Math.Abs(daysUntil) days ago.</p>
                     <p class="mb-0">
-                        <a asp-action="Edit" asp-route-id="@Model.RecallId" class="btn btn-warning">
+                        <a href="@Url.Action("Edit", "Recall", new { id = Model.RecallId })" class="btn-warning">
                             Reschedule Recall Date
                         </a>
                     </p>
@@ -98,8 +95,8 @@
             }
             else if (daysUntil <= 7)
             {
-                <div class="alert alert-warning mt-3">
-                    <h5><i class="fas fa-clock"></i> Recall coming soon!</h5>
+                <div class="alert alert-warning">
+                    <h5>🕐 Recall coming soon!</h5>
                     <p class="mb-0">Patient should return in @daysUntil days on @Model.RecallDate.ToString("MMMM dd, yyyy").</p>
                 </div>
             }
@@ -122,22 +119,22 @@
                         <dd>@(Model.Patient.Email ?? "N/A")</dd>
                     </dl>
 
-                    <a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.PatientId" class="btn btn-sm btn-info w-100">
+                    <a href="@Url.Action("Details", "Patients", new { id = Model.PatientId })" class="btn-info btn-sm w-100 mt-3">
                         View Full Patient Details
                     </a>
                 </div>
             </div>
 
-            <div class="card mt-3">
+            <div class="card">
                 <div class="card-header">
                     <h5>Actions</h5>
                 </div>
                 <div class="card-body">
-                    <a asp-action="Edit" asp-route-id="@Model.RecallId" class="btn btn-warning w-100 mb-2">
-                        <i class="fas fa-edit"></i> Modify Recall Date
+                    <a href="@Url.Action("Edit", "Recall", new { id = Model.RecallId })" class="btn-warning w-100 mb-2">
+                        ✏️ Modify Recall Date
                     </a>
-                    <a asp-action="Delete" asp-route-id="@Model.RecallId" class="btn btn-danger w-100">
-                        <i class="fas fa-trash"></i> Delete Recall
+                    <a href="@Url.Action("Delete", "Recall", new { id = Model.RecallId })" class="btn-danger w-100">
+                        🗑️ Delete Recall
                     </a>
                 </div>
             </div>

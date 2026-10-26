@@ -12,10 +12,12 @@ namespace LuxeSmilesDental.Controllers
     public class InventoryController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<InventoryController> _logger;
 
-        public InventoryController(ApplicationDbContext context)
+        public InventoryController(ApplicationDbContext context, ILogger<InventoryController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -65,23 +67,61 @@ namespace LuxeSmilesDental.Controllers
         [AuthorizeSession("Dentist", "Dental Assistant")] // Secretary cannot add items
         public async Task<IActionResult> AddItem(InventoryItem item)
         {
-            ModelState.Remove("ItemId");
-            ModelState.Remove("Status");
-
-            if (ModelState.IsValid)
+            try
             {
+                _logger.LogInformation("AddItem called with ItemName: {ItemName}", item?.ItemName);
+
+                // Remove validation for auto-generated fields
+                ModelState.Remove("ItemId");
+                ModelState.Remove("Status");
+                ModelState.Remove("CreatedAt");
+                ModelState.Remove("UpdatedAt");
+
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList();
+
+                    _logger.LogWarning("ModelState invalid: {Errors}", string.Join(", ", errors));
+
+                    // FIXED: Always return proper JSON with status 400 for validation errors
+                    Response.StatusCode = 400;
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Invalid data: " + string.Join(", ", errors)
+                    });
+                }
+
                 if (item.Quantity < 0 || item.MinimumStock < 0)
                 {
+                    Response.StatusCode = 400;
                     return Json(new { success = false, message = "Quantity cannot be negative" });
                 }
 
                 item.Status = item.Quantity <= item.MinimumStock ? "Low" : "In Stock";
+                item.CreatedAt = DateTime.Now;
+                item.UpdatedAt = DateTime.Now;
+
                 _context.Inventory.Add(item);
                 await _context.SaveChangesAsync();
-                return Json(new { success = true });
-            }
 
-            return Json(new { success = false, message = "Invalid data" });
+                _logger.LogInformation("Item added successfully: {ItemId}", item.ItemId);
+
+                // FIXED: Return proper JSON response with 200 status code
+                Response.StatusCode = 200;
+                return Json(new { success = true, message = "Item added successfully", itemId = item.ItemId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding item");
+
+                // FIXED: Return proper JSON error response with 500 status
+                Response.StatusCode = 500;
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
         }
 
         [HttpPost]
@@ -89,32 +129,76 @@ namespace LuxeSmilesDental.Controllers
         [AuthorizeSession("Dentist", "Dental Assistant")] // Secretary cannot update items
         public async Task<IActionResult> UpdateItem(InventoryItem item)
         {
-            if (item.ItemId <= 0)
+            try
             {
-                return Json(new { success = false, message = "Invalid item" });
-            }
+                _logger.LogInformation("UpdateItem called for ItemId: {ItemId}", item?.ItemId);
 
-            if (ModelState.IsValid)
-            {
+                if (item.ItemId <= 0)
+                {
+                    Response.StatusCode = 400;
+                    return Json(new { success = false, message = "Invalid item ID" });
+                }
+
+                // Remove validation for fields that will be set by the server
+                ModelState.Remove("CreatedAt");
+                ModelState.Remove("UpdatedAt");
+                ModelState.Remove("Status");
+
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList();
+
+                    _logger.LogWarning("ModelState invalid: {Errors}", string.Join(", ", errors));
+
+                    Response.StatusCode = 400;
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Invalid data: " + string.Join(", ", errors)
+                    });
+                }
+
                 if (item.Quantity < 0 || item.MinimumStock < 0)
                 {
+                    Response.StatusCode = 400;
                     return Json(new { success = false, message = "Quantity cannot be negative" });
                 }
 
-                try
+                var existingItem = await _context.Inventory.FindAsync(item.ItemId);
+                if (existingItem == null)
                 {
-                    item.Status = item.Quantity <= item.MinimumStock ? "Low" : "In Stock";
-                    _context.Inventory.Update(item);
-                    await _context.SaveChangesAsync();
-                    return Json(new { success = true });
+                    Response.StatusCode = 404;
+                    return Json(new { success = false, message = "Item not found" });
                 }
-                catch
-                {
-                    return Json(new { success = false, message = "Update failed" });
-                }
-            }
 
-            return Json(new { success = false, message = "Invalid data" });
+                // Update properties
+                existingItem.ItemName = item.ItemName;
+                existingItem.Category = item.Category;
+                existingItem.Quantity = item.Quantity;
+                existingItem.Unit = item.Unit;
+                existingItem.MinimumStock = item.MinimumStock;
+                existingItem.Supplier = item.Supplier;
+                existingItem.Status = item.Quantity <= item.MinimumStock ? "Low" : "In Stock";
+                existingItem.UpdatedAt = DateTime.Now;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Item updated successfully: {ItemId}", item.ItemId);
+
+                // FIXED: Always return proper JSON with status 200
+                Response.StatusCode = 200;
+                return Json(new { success = true, message = "Item updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating item {ItemId}", item?.ItemId);
+
+                Response.StatusCode = 500;
+                return Json(new { success = false, message = $"Update failed: {ex.Message}" });
+            }
         }
 
         [HttpPost]
@@ -122,34 +206,62 @@ namespace LuxeSmilesDental.Controllers
         [AuthorizeSession("Dentist")] // ONLY Dentist can delete inventory items
         public async Task<IActionResult> DeleteItem(int id)
         {
-            if (id <= 0)
+            try
             {
-                return Json(new { success = false, message = "Invalid ID" });
-            }
+                _logger.LogInformation("DeleteItem called for ItemId: {ItemId}", id);
 
-            var item = await _context.Inventory.FindAsync(id);
-            if (item != null)
-            {
+                if (id <= 0)
+                {
+                    Response.StatusCode = 400;
+                    return Json(new { success = false, message = "Invalid ID" });
+                }
+
+                var item = await _context.Inventory.FindAsync(id);
+                if (item == null)
+                {
+                    Response.StatusCode = 404;
+                    return Json(new { success = false, message = "Item not found" });
+                }
+
                 _context.Inventory.Remove(item);
                 await _context.SaveChangesAsync();
-                return Json(new { success = true });
-            }
 
-            return Json(new { success = false, message = "Item not found" });
+                _logger.LogInformation("Item deleted successfully: {ItemId}", id);
+
+                Response.StatusCode = 200;
+                return Json(new { success = true, message = "Item deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting item {ItemId}", id);
+
+                Response.StatusCode = 500;
+                return Json(new { success = false, message = $"Delete failed: {ex.Message}" });
+            }
         }
 
         [HttpGet]
         [AuthorizeSession("Dentist", "Dental Assistant")] // Secretary cannot access this
         public async Task<IActionResult> GetItem(int id)
         {
-            if (id <= 0)
+            try
             {
-                return Json(new { success = false });
-            }
+                _logger.LogInformation("GetItem called for ItemId: {ItemId}", id);
 
-            var item = await _context.Inventory.FindAsync(id);
-            if (item != null)
-            {
+                if (id <= 0)
+                {
+                    Response.StatusCode = 400;
+                    return Json(new { success = false, message = "Invalid ID" });
+                }
+
+                var item = await _context.Inventory.FindAsync(id);
+                if (item == null)
+                {
+                    Response.StatusCode = 404;
+                    return Json(new { success = false, message = "Item not found" });
+                }
+
+                Response.StatusCode = 200;
                 return Json(new
                 {
                     success = true,
@@ -165,8 +277,13 @@ namespace LuxeSmilesDental.Controllers
                     }
                 });
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting item {ItemId}", id);
 
-            return Json(new { success = false });
+                Response.StatusCode = 500;
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
         }
     }
 }

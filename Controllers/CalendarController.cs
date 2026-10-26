@@ -31,66 +31,253 @@ namespace LuxeSmilesDental.Controllers
             var start = new DateTime(displayYear, displayMonth, 1);
             var end = start.AddMonths(1).AddDays(-1);
 
+            // Include Dentist and Patient navigation properties
             ViewBag.Appointments = await _context.Appointments
+                .Include(a => a.Dentist)
+                .Include(a => a.Patient)
                 .Where(a => a.AppointmentDate >= start && a.AppointmentDate <= end)
+                .ToListAsync();
+
+            // Get all dentists for dropdown
+            ViewBag.Dentists = await _context.Users
+                .Where(u => u.Role == "Dentist" && u.IsActive)
+                .OrderBy(u => u.EmployeeName)
+                .ToListAsync();
+
+            // Get all patients for dropdown
+            ViewBag.Patients = await _context.Patients
+                .OrderBy(p => p.FirstName)
+                .ThenBy(p => p.LastName)
                 .ToListAsync();
 
             return View();
         }
 
+        // Replace your existing DayDetails action with this one:
+
+        [HttpGet]
+        public async Task<IActionResult> DayDetails(string date)
+        {
+            if (!DateTime.TryParse(date, out DateTime parsedDate))
+            {
+                return RedirectToAction("Index");
+            }
+
+            var appointments = await _context.Appointments
+                .Include(a => a.Dentist)
+                .Include(a => a.Patient)
+                .Where(a => a.AppointmentDate.Date == parsedDate.Date)
+                .ToListAsync();
+
+            ViewBag.Date = parsedDate;
+
+            // Pass dentists and patients so the edit modal can populate its dropdowns
+            ViewBag.Dentists = await _context.Users
+                .Where(u => u.Role == "Dentist" && u.IsActive)
+                .OrderBy(u => u.EmployeeName)
+                .ToListAsync();
+
+            ViewBag.Patients = await _context.Patients
+                .OrderBy(p => p.FirstName)
+                .ThenBy(p => p.LastName)
+                .ToListAsync();
+
+            return View(appointments);
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
+        {
+            if (id <= 0)
+            {
+                return NotFound();
+            }
+
+            var appointment = await _context.Appointments
+                .Include(a => a.Dentist)
+                .Include(a => a.Patient)
+                .FirstOrDefaultAsync(a => a.AppointmentId == id);
+
+            if (appointment == null)
+            {
+                return NotFound();
+            }
+
+            return View(appointment);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ViewAppointment(int id)
+        {
+            if (id <= 0)
+            {
+                return Json(new { success = false, message = "Invalid appointment ID" });
+            }
+
+            var appointment = await _context.Appointments
+                .Include(a => a.Dentist)
+                .Include(a => a.Patient)
+                .FirstOrDefaultAsync(a => a.AppointmentId == id);
+
+            if (appointment == null)
+            {
+                return Json(new { success = false, message = "Appointment not found" });
+            }
+
+            return Json(new
+            {
+                success = true,
+                appointment = new
+                {
+                    appointmentId = appointment.AppointmentId,
+                    patientId = appointment.PatientId,
+                    patientName = appointment.Patient != null
+                        ? $"{appointment.Patient.FirstName} {appointment.Patient.LastName}"
+                        : appointment.PatientName,
+                    patientPhone = appointment.Patient?.ContactNumber,
+                    patientEmail = appointment.Patient?.Email,
+                    dentistId = appointment.DentistId,
+                    dentistName = appointment.Dentist?.EmployeeName,
+                    appointmentDate = appointment.AppointmentDate.ToString("yyyy-MM-ddTHH:mm"),
+                    notes = appointment.Notes,
+                    status = appointment.Status,
+                    createdAt = appointment.CreatedAt.ToString("yyyy-MM-dd HH:mm")
+                }
+            });
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateAppointment(Appointment appointment)
+        public async Task<IActionResult> CreateAppointment([FromBody] AppointmentDto dto)
         {
-            ModelState.Remove("AppointmentId");
-
-            if (ModelState.IsValid)
+            if (dto.AppointmentDate < DateTime.Now.AddDays(-1))
             {
-                if (appointment.AppointmentDate < DateTime.Now.AddDays(-1))
-                {
-                    return Json(new { success = false, message = "Cannot create appointments in the past" });
-                }
+                return Json(new { success = false, message = "Cannot create appointments in the past" });
+            }
 
-                appointment.CreatedAt = DateTime.UtcNow;
-                _context.Appointments.Add(appointment);
+            // Validate DentistId
+            if (dto.DentistId <= 0)
+            {
+                return Json(new { success = false, message = "Please select a dentist" });
+            }
+
+            // Verify dentist exists
+            var dentistExists = await _context.Users
+                .AnyAsync(u => u.UserId == dto.DentistId && u.Role == "Dentist" && u.IsActive);
+
+            if (!dentistExists)
+            {
+                return Json(new { success = false, message = "Invalid dentist selected" });
+            }
+
+            // Validate patient selection
+            if (!dto.PatientId.HasValue || dto.PatientId.Value <= 0)
+            {
+                return Json(new { success = false, message = "Please select a patient" });
+            }
+
+            // Verify patient exists
+            var patientExists = await _context.Patients.AnyAsync(p => p.PatientId == dto.PatientId.Value);
+            if (!patientExists)
+            {
+                return Json(new { success = false, message = "Invalid patient selected" });
+            }
+
+            // Get patient name for legacy field
+            var patient = await _context.Patients.FindAsync(dto.PatientId.Value);
+
+            var appointment = new Appointment
+            {
+                PatientId = dto.PatientId,
+                PatientName = $"{patient.FirstName} {patient.LastName}", // Populate legacy field
+                DentistId = dto.DentistId,
+                AppointmentDate = dto.AppointmentDate,
+                Notes = dto.Notes,
+                Status = "Scheduled",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Appointments.Add(appointment);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateAppointment([FromBody] AppointmentDto dto)
+        {
+            if (dto.AppointmentId <= 0)
+            {
+                return Json(new { success = false, message = "Invalid appointment ID" });
+            }
+
+            var appointment = await _context.Appointments.FindAsync(dto.AppointmentId);
+            if (appointment == null)
+            {
+                return Json(new { success = false, message = "Appointment not found" });
+            }
+
+            // Validate DentistId
+            if (dto.DentistId <= 0)
+            {
+                return Json(new { success = false, message = "Please select a dentist" });
+            }
+
+            // Verify dentist exists
+            var dentistExists = await _context.Users
+                .AnyAsync(u => u.UserId == dto.DentistId && u.Role == "Dentist" && u.IsActive);
+
+            if (!dentistExists)
+            {
+                return Json(new { success = false, message = "Invalid dentist selected" });
+            }
+
+            // Validate patient selection
+            if (!dto.PatientId.HasValue || dto.PatientId.Value <= 0)
+            {
+                return Json(new { success = false, message = "Please select a patient" });
+            }
+
+            // Verify patient exists
+            var patientExists = await _context.Patients.AnyAsync(p => p.PatientId == dto.PatientId.Value);
+            if (!patientExists)
+            {
+                return Json(new { success = false, message = "Invalid patient selected" });
+            }
+
+            // Get patient name for legacy field
+            var patient = await _context.Patients.FindAsync(dto.PatientId.Value);
+
+            appointment.PatientId = dto.PatientId;
+            appointment.PatientName = $"{patient.FirstName} {patient.LastName}";
+            appointment.DentistId = dto.DentistId;
+            appointment.AppointmentDate = dto.AppointmentDate;
+            appointment.Notes = dto.Notes;
+
+            try
+            {
+                _context.Appointments.Update(appointment);
                 await _context.SaveChangesAsync();
                 return Json(new { success = true });
             }
-
-            return Json(new { success = false, message = "Invalid appointment data" });
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateAppointment(Appointment appointment)
-        {
-            if (ModelState.IsValid)
+            catch (Exception ex)
             {
-                try
-                {
-                    _context.Appointments.Update(appointment);
-                    await _context.SaveChangesAsync();
-                    return Json(new { success = true });
-                }
-                catch
-                {
-                    return Json(new { success = false, message = "Update failed" });
-                }
+                return Json(new { success = false, message = $"Update failed: {ex.Message}" });
             }
-
-            return Json(new { success = false, message = "Invalid data" });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteAppointment(int id)
+        public async Task<IActionResult> DeleteAppointment([FromBody] DeleteRequest request)
         {
-            if (id <= 0)
+            if (request.Id <= 0)
             {
                 return Json(new { success = false, message = "Invalid ID" });
             }
 
-            var appointment = await _context.Appointments.FindAsync(id);
+            var appointment = await _context.Appointments.FindAsync(request.Id);
             if (appointment != null)
             {
                 _context.Appointments.Remove(appointment);
@@ -110,17 +297,37 @@ namespace LuxeSmilesDental.Controllers
             }
 
             var appointments = await _context.Appointments
+                .Include(a => a.Dentist)
+                .Include(a => a.Patient)
                 .Where(a => a.AppointmentDate.Date == parsedDate.Date)
                 .Select(a => new
                 {
                     appointmentId = a.AppointmentId,
+                    patientId = a.PatientId,
                     patientName = a.PatientName,
+                    dentistId = a.DentistId,
+                    dentistName = a.Dentist.EmployeeName,
                     appointmentDate = a.AppointmentDate,
                     notes = a.Notes
                 })
                 .ToListAsync();
 
             return Json(new { success = true, appointments });
+        }
+
+        // DTO classes for JSON binding
+        public class AppointmentDto
+        {
+            public int AppointmentId { get; set; }
+            public int? PatientId { get; set; }
+            public int DentistId { get; set; }
+            public DateTime AppointmentDate { get; set; }
+            public string Notes { get; set; }
+        }
+
+        public class DeleteRequest
+        {
+            public int Id { get; set; }
         }
     }
 }

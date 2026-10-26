@@ -1,5 +1,4 @@
 // Controllers/AccountController.cs
-// SECURITY FIXES + Logout fix for GET requests
 
 using Microsoft.AspNetCore.Mvc;
 using LuxeSmilesDental.Data;
@@ -100,7 +99,6 @@ namespace LuxeSmilesDental.Controllers
             return View(model);
         }
 
-        // FIXED: Accept both GET and POST for logout
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();

@@ -22,8 +22,12 @@
                     </div>
                 }
                 <form asp-action="Login" method="post">
-                    <input type="text" asp-for="Username" placeholder="Username" class="input-field" />
-                    <input type="password" asp-for="Password" placeholder="Password" class="input-field" />
+                    <div class="form-group">
+                        <input type="text" asp-for="Username" placeholder="Username" class="input-field" />
+                    </div>
+                    <div class="form-group">
+                        <input type="password" asp-for="Password" placeholder="Password" class="input-field" />
+                    </div>
                     <button type="submit" class="login-btn">Login</button>
                 </form>
             </div>

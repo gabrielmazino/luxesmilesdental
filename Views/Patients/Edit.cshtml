@@ -1,84 +1,581 @@
 ﻿@model LuxeSmilesDental.Models.Patient
 @{
-    ViewData["Title"] = "Edit Patient";
+    ViewData["Title"] = "Edit Patient Record - " + Model.FullName;
 }
 
-<div class="container mt-4">
-    <h2>Edit Patient</h2>
-    <hr />
+<div class="patients-container">
+    <div class="page-header">
+        <h1>✏️ Edit Patient Record</h1>
+        <button class="btn-primary" onclick="window.location.href='@Url.Action("Details", "Patients", new { id = Model.PatientId })'" style="background: #999;">
+            ← Back to Patient
+        </button>
+    </div>
 
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-body">
-                    <form asp-action="Edit" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <div style="background: white; padding: 40px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); max-width: 1200px;">
+        
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger">
+                <strong>⚠️ Please fix the following errors:</strong>
+                <div asp-validation-summary="All"></div>
+            </div>
+        }
 
-                        <input type="hidden" asp-for="PatientId" />
-                        <input type="hidden" asp-for="CreatedAt" />
+        <form asp-action="Edit" method="post" id="patientForm">
+            <input type="hidden" asp-for="PatientId" />
+            <input type="hidden" asp-for="CreatedAt" />
+            
+            <!-- BASIC INFORMATION SECTION -->
+            <div style="margin-bottom: 40px;">
+                <h2 style="color: var(--primary-dark); font-size: 22px; font-weight: 700; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 3px solid var(--primary);">
+                    Basic Information
+                </h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label asp-for="LastName" class="required"></label>
+                        <input asp-for="LastName" required />
+                        <span asp-validation-for="LastName" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="FirstName" class="required"></label>
+                        <input asp-for="FirstName" required />
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="MiddleName"></label>
+                        <input asp-for="MiddleName" />
+                        <span asp-validation-for="MiddleName" class="text-danger"></span>
+                    </div>
+                </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label asp-for="FirstName" class="form-label"></label>
-                                    <input asp-for="FirstName" class="form-control" />
-                                    <span asp-validation-for="FirstName" class="text-danger"></span>
-                                </div>
-                            </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label asp-for="Nickname"></label>
+                        <input asp-for="Nickname" />
+                        <span asp-validation-for="Nickname" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group priority">
+                        <label asp-for="BirthDate" class="required"></label>
+                        <input asp-for="BirthDate" type="date" required max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                        <span asp-validation-for="BirthDate" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="Sex" class="required"></label>
+                        <select asp-for="Sex" required>
+                            <option value="">-- Select --</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                        <span asp-validation-for="Sex" class="text-danger"></span>
+                    </div>
 
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label asp-for="LastName" class="form-label"></label>
-                                    <input asp-for="LastName" class="form-control" />
-                                    <span asp-validation-for="LastName" class="text-danger"></span>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="form-group priority">
+                        <label asp-for="ContactNumber" class="required"></label>
+                        <input asp-for="ContactNumber" type="tel" required placeholder="+63 XXX XXX XXXX" />
+                        <span asp-validation-for="ContactNumber" class="text-danger"></span>
+                    </div>
+                </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label asp-for="ContactNumber" class="form-label"></label>
-                                    <input asp-for="ContactNumber" class="form-control" />
-                                    <span asp-validation-for="ContactNumber" class="text-danger"></span>
-                                </div>
-                            </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label asp-for="Religion"></label>
+                        <input asp-for="Religion" />
+                        <span asp-validation-for="Religion" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="Nationality"></label>
+                        <input asp-for="Nationality" placeholder="e.g., Filipino" />
+                        <span asp-validation-for="Nationality" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group priority">
+                        <label asp-for="Email"></label>
+                        <input asp-for="Email" type="email" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                </div>
 
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label asp-for="Email" class="form-label"></label>
-                                    <input asp-for="Email" class="form-control" type="email" />
-                                    <span asp-validation-for="Email" class="text-danger"></span>
-                                </div>
-                            </div>
-                        </div>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                    <div class="form-group priority">
+                        <label asp-for="Address" class="required"></label>
+                        <input asp-for="Address" required placeholder="Street, Barangay, City, Province" />
+                        <span asp-validation-for="Address" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="HealthCardNumber"></label>
+                        <input asp-for="HealthCardNumber" placeholder="PhilHealth/HMO Number" />
+                        <span asp-validation-for="HealthCardNumber" class="text-danger"></span>
+                    </div>
+                </div>
 
-                        <div class="form-group mb-3">
-                            <label asp-for="Address" class="form-label"></label>
-                            <input asp-for="Address" class="form-control" />
-                            <span asp-validation-for="Address" class="text-danger"></span>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label asp-for="BirthDate" class="form-label"></label>
-                            <input asp-for="BirthDate" class="form-control" type="date" />
-                            <span asp-validation-for="BirthDate" class="text-danger"></span>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label asp-for="Notes" class="form-label"></label>
-                            <textarea asp-for="Notes" class="form-control" rows="4"></textarea>
-                            <span asp-validation-for="Notes" class="text-danger"></span>
-                        </div>
-
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
-                            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-                        </div>
-                    </form>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label asp-for="Occupation"></label>
+                        <input asp-for="Occupation" />
+                        <span asp-validation-for="Occupation" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="Company"></label>
+                        <input asp-for="Company" />
+                        <span asp-validation-for="Company" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="AssignedDentist"></label>
+                        <input asp-for="AssignedDentist" placeholder="Preferred dentist" />
+                        <span asp-validation-for="AssignedDentist" class="text-danger"></span>
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <!-- FOR MINORS SECTION -->
+            <div style="margin-bottom: 40px;" id="minorSection">
+                <h2 style="color: var(--primary-dark); font-size: 22px; font-weight: 700; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 3px solid var(--primary);">
+                    For Minors (Under 18)
+                </h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label asp-for="ParentGuardianName"></label>
+                        <input asp-for="ParentGuardianName" />
+                        <span asp-validation-for="ParentGuardianName" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="ParentGuardianOccupation"></label>
+                        <input asp-for="ParentGuardianOccupation" />
+                        <span asp-validation-for="ParentGuardianOccupation" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REFERRAL SECTION -->
+            <div style="margin-bottom: 40px;">
+                <h2 style="color: var(--primary-dark); font-size: 22px; font-weight: 700; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 3px solid var(--primary);">
+                    Referral Information
+                </h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label asp-for="ReferredBy"></label>
+                        <input asp-for="ReferredBy" placeholder="Whom may we thank for referring you?" />
+                        <span asp-validation-for="ReferredBy" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="ReasonForConsultation"></label>
+                        <input asp-for="ReasonForConsultation" placeholder="What is the reason for consultation?" />
+                        <span asp-validation-for="ReasonForConsultation" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DENTAL HISTORY SECTION -->
+            <div style="margin-bottom: 40px;">
+                <h2 style="color: var(--primary-dark); font-size: 22px; font-weight: 700; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 3px solid var(--primary);">
+                    Dental History
+                </h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label asp-for="PreviousDentist"></label>
+                        <input asp-for="PreviousDentist" placeholder="Dr. [Name]" />
+                        <span asp-validation-for="PreviousDentist" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="PreviousDentistSpecialty"></label>
+                        <input asp-for="PreviousDentistSpecialty" placeholder="e.g., Orthodontics, Prosthodontics" />
+                        <span asp-validation-for="PreviousDentistSpecialty" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+                    <div class="form-group">
+                        <label asp-for="LastDentalVisit"></label>
+                        <input asp-for="LastDentalVisit" type="date" max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                        <span asp-validation-for="LastDentalVisit" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="LastDentalProcedure"></label>
+                        <input asp-for="LastDentalProcedure" placeholder="Procedure done (e.g., Cleaning, Filling, Extraction)" />
+                        <span asp-validation-for="LastDentalProcedure" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MEDICAL HISTORY SECTION -->
+            <div style="margin-bottom: 40px;">
+                <h2 style="color: var(--primary-dark); font-size: 22px; font-weight: 700; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 3px solid var(--primary);">
+                    Medical History
+                </h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label asp-for="PhysicianName"></label>
+                        <input asp-for="PhysicianName" placeholder="Dr. [Name]" />
+                        <span asp-validation-for="PhysicianName" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="PhysicianSpecialty"></label>
+                        <input asp-for="PhysicianSpecialty" placeholder="Specialty, if applicable" />
+                        <span asp-validation-for="PhysicianSpecialty" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="PhysicianOfficeNumber"></label>
+                        <input asp-for="PhysicianOfficeNumber" type="tel" placeholder="Office phone number" />
+                        <span asp-validation-for="PhysicianOfficeNumber" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- Medical Questions -->
+                <div style="background: linear-gradient(135deg, rgba(184, 215, 168, 0.08) 0%, rgba(184, 215, 168, 0.02) 100%); padding: 24px; border-radius: 12px; margin-top: 24px;">
+                    <h3 style="font-size: 18px; font-weight: 600; color: var(--gray-800); margin-bottom: 20px;">Medical Questions</h3>
+                    
+                    <div style="display: grid; gap: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px;">
+                            <label asp-for="InGoodHealth" style="margin: 0; font-weight: 500;">Are you in good health?</label>
+                            <div style="display: flex; gap: 20px;">
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="InGoodHealth" value="true" /> Yes
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="InGoodHealth" value="false" /> No
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px;">
+                            <label asp-for="UnderMedicalTreatment" style="margin: 0; font-weight: 500;">Are you under medical treatment now?</label>
+                            <div style="display: flex; gap: 20px;">
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="UnderMedicalTreatment" value="true" onclick="toggleDetails('treatmentDetails')" /> Yes
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="UnderMedicalTreatment" value="false" onclick="toggleDetails('treatmentDetails')" /> No
+                                </label>
+                            </div>
+                        </div>
+                        <div id="treatmentDetails" class="conditional-field" style="display: @(Model.UnderMedicalTreatment == true ? "block" : "none");">
+                            <input asp-for="MedicalTreatmentDetails" placeholder="Please specify treatment details..." style="width: 100%;" />
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px;">
+                            <label asp-for="HadSeriousIllness" style="margin: 0; font-weight: 500;">Have you ever had serious illness or surgical operation?</label>
+                            <div style="display: flex; gap: 20px;">
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="HadSeriousIllness" value="true" onclick="toggleDetails('illnessDetails')" /> Yes
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="HadSeriousIllness" value="false" onclick="toggleDetails('illnessDetails')" /> No
+                                </label>
+                            </div>
+                        </div>
+                        <div id="illnessDetails" class="conditional-field" style="display: @(Model.HadSeriousIllness == true ? "block" : "none");">
+                            <input asp-for="SeriousIllnessDetails" placeholder="Please specify illness/surgery details..." style="width: 100%;" />
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px;">
+                            <label asp-for="BeenHospitalized" style="margin: 0; font-weight: 500;">Have you ever been hospitalized?</label>
+                            <div style="display: flex; gap: 20px;">
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="BeenHospitalized" value="true" onclick="toggleDetails('hospitalizationDetails')" /> Yes
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="BeenHospitalized" value="false" onclick="toggleDetails('hospitalizationDetails')" /> No
+                                </label>
+                            </div>
+                        </div>
+                        <div id="hospitalizationDetails" class="conditional-field" style="display: @(Model.BeenHospitalized == true ? "block" : "none");">
+                            <input asp-for="HospitalizationDetails" placeholder="Please specify hospitalization details..." style="width: 100%;" />
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px;">
+                            <label asp-for="TakingMedications" style="margin: 0; font-weight: 500;">Are you taking any medications?</label>
+                            <div style="display: flex; gap: 20px;">
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="TakingMedications" value="true" onclick="toggleDetails('medicationsDetails')" /> Yes
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="TakingMedications" value="false" onclick="toggleDetails('medicationsDetails')" /> No
+                                </label>
+                            </div>
+                        </div>
+                        <div id="medicationsDetails" class="conditional-field" style="display: @(Model.TakingMedications == true ? "block" : "none");">
+                            <input asp-for="CurrentMedications" placeholder="Please list all medications..." style="width: 100%;" />
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px;">
+                            <label asp-for="SmokingHistory" style="margin: 0; font-weight: 500;">Smoking History</label>
+                            <div style="display: flex; gap: 20px;">
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="SmokingHistory" value="true" /> Yes
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="SmokingHistory" value="false" /> No
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px;">
+                            <label asp-for="AlcoholDrugUse" style="margin: 0; font-weight: 500;">Alcohol, Cocaine or other dangerous drug use</label>
+                            <div style="display: flex; gap: 20px;">
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="AlcoholDrugUse" value="true" /> Yes
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="AlcoholDrugUse" value="false" /> No
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px;">
+                            <label asp-for="HasAllergies" style="margin: 0; font-weight: 500;">Previous Allergies (LA or medications)</label>
+                            <div style="display: flex; gap: 20px;">
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="HasAllergies" value="true" onclick="toggleDetails('allergyDetails')" /> Yes
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="HasAllergies" value="false" onclick="toggleDetails('allergyDetails')" /> No
+                                </label>
+                            </div>
+                        </div>
+                        <div id="allergyDetails" class="conditional-field" style="display: @(Model.HasAllergies == true ? "block" : "none");">
+                            <input asp-for="AllergyDetails" placeholder="Please specify allergies..." style="width: 100%;" />
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 20px;">
+                        <div class="form-group">
+                            <label asp-for="BleedingTime"></label>
+                            <input asp-for="BleedingTime" placeholder="e.g., 2-5 minutes" />
+                        </div>
+                        
+                        <div class="form-group">
+                            <label asp-for="BloodType"></label>
+                            <select asp-for="BloodType">
+                                <option value="">-- Select --</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label asp-for="BloodPressure"></label>
+                            <input asp-for="BloodPressure" placeholder="e.g., 120/80" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- For Women Only -->
+                <div id="womenSection" style="background: #fff0f5; padding: 24px; border-radius: 12px; margin-top: 24px; border: 2px solid #ffb6c1; display: @(Model.Sex == "Female" ? "block" : "none");">
+                    <h3 style="font-size: 18px; font-weight: 600; color: #d63384; margin-bottom: 20px;">👩 For Women Only</h3>
+                    
+                    <div style="display: grid; gap: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px;">
+                            <label asp-for="IsPregnant" style="margin: 0; font-weight: 500;">Pregnant?</label>
+                            <div style="display: flex; gap: 20px;">
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="IsPregnant" value="true" /> Yes
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="IsPregnant" value="false" /> No
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px;">
+                            <label asp-for="IsNursing" style="margin: 0; font-weight: 500;">Are you nursing?</label>
+                            <div style="display: flex; gap: 20px;">
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="IsNursing" value="true" /> Yes
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="IsNursing" value="false" /> No
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px;">
+                            <label asp-for="TakingBirthControl" style="margin: 0; font-weight: 500;">Are you taking any birth control pills?</label>
+                            <div style="display: flex; gap: 20px;">
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="TakingBirthControl" value="true" /> Yes
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                    <input type="radio" asp-for="TakingBirthControl" value="false" /> No
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medical Conditions Checkboxes -->
+                <div style="margin-top: 24px;">
+                    <h3 style="font-size: 18px; font-weight: 600; color: var(--gray-800); margin-bottom: 20px;">Do you have or have you had any of these following?</h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="HighBloodPressure" style="width: 20px; height: 20px;" />
+                            <span>High Blood Pressure</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="LowBloodPressure" style="width: 20px; height: 20px;" />
+                            <span>Low Blood Pressure</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="HeartDisease" style="width: 20px; height: 20px;" />
+                            <span>Heart Disease</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="HeartSurgeryAttack" style="width: 20px; height: 20px;" />
+                            <span>Previous Heart Surgery/Attack</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="ChestPain" style="width: 20px; height: 20px;" />
+                            <span>Chest Pain</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="Stroke" style="width: 20px; height: 20px;" />
+                            <span>Stroke</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="LiverDisease" style="width: 20px; height: 20px;" />
+                            <span>Liver Disease</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="KidneyDisease" style="width: 20px; height: 20px;" />
+                            <span>Kidney Disease</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="ThyroidProblems" style="width: 20px; height: 20px;" />
+                            <span>Thyroid Problems</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="LungDisorder" style="width: 20px; height: 20px;" />
+                            <span>Lung Disorder</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="GITDisease" style="width: 20px; height: 20px;" />
+                            <span>GIT Disease</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="Tuberculosis" style="width: 20px; height: 20px;" />
+                            <span>Tuberculosis</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="BloodDyscrasias" style="width: 20px; height: 20px;" />
+                            <span>Blood Dyscrasias (Anemia, Leukemia, Thrombocytopenia)</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="BleedingTendencies" style="width: 20px; height: 20px;" />
+                            <span>Bleeding Tendencies</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="HeadInjuries" style="width: 20px; height: 20px;" />
+                            <span>Head Injuries</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="ArthritisRheumatism" style="width: 20px; height: 20px;" />
+                            <span>Arthritis / Rheumatism</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="CancerTumors" style="width: 20px; height: 20px;" />
+                            <span>Cancer/Tumors</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="RadiationChemotherapy" style="width: 20px; height: 20px;" />
+                            <span>Radiation Therapy/Chemotherapy</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="InfectiveDisease" style="width: 20px; height: 20px;" />
+                            <span>Infective Disease (STDs, AIDS/HIV, Hepatitis)</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; border: 2px solid var(--gray-200); cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" asp-for="ExtremeAnxiety" style="width: 20px; height: 20px;" />
+                            <span>Extreme Anxiety</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAMILY HISTORY SECTION -->
+            <div style="margin-bottom: 40px;">
+                <h2 style="color: var(--primary-dark); font-size: 22px; font-weight: 700; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 3px solid var(--primary);">
+                    Family History
+                </h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label asp-for="PaternalHistory"></label>
+                        <textarea asp-for="PaternalHistory" rows="3" placeholder="Paternal medical conditions (father's side)"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="MaternalHistory"></label>
+                        <textarea asp-for="MaternalHistory" rows="3" placeholder="Maternal medical conditions (mother's side)"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADDITIONAL NOTES SECTION -->
+            <div style="margin-bottom: 40px;">
+                <h2 style="color: var(--primary-dark); font-size: 22px; font-weight: 700; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 3px solid var(--primary);">
+                    Additional Notes
+                </h2>
+                
+                <div class="form-group">
+                    <label asp-for="Notes"></label>
+                    <textarea asp-for="Notes" rows="5" placeholder="Any additional information or special considerations..."></textarea>
+                </div>
+            </div>
+
+            <!-- FORM ACTIONS -->
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 40px; padding-top: 30px; border-top: 2px solid var(--gray-200);">
+                <button type="submit" class="btn-primary" style="padding: 16px 48px; font-size: 16px; font-weight: 700;">
+                    ✓ Save Changes
+                </button>
+                <button type="button" class="btn-primary" onclick="window.location.href='@Url.Action("Details", "Patients", new { id = Model.PatientId })'" style="background: #999; padding: 16px 48px; font-size: 16px;">
+                    ✕ Cancel
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -86,4 +583,95 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    
+    <script>
+        // Toggle conditional fields based on Yes/No answers
+        function toggleDetails(fieldId) {
+            const field = document.getElementById(fieldId);
+            const parentQuestion = field.previousElementSibling;
+            const yesRadio = parentQuestion.querySelector('input[value="true"]');
+            
+            if (yesRadio && yesRadio.checked) {
+                field.style.display = 'block';
+                setTimeout(() => field.style.opacity = '1', 10);
+            } else {
+                field.style.opacity = '0';
+                setTimeout(() => field.style.display = 'none', 200);
+            }
+        }
+
+        // Show/hide minor section based on age
+        document.querySelector('input[name="BirthDate"]').addEventListener('change', function() {
+            const birthDate = new Date(this.value);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            
+            const minorSection = document.getElementById('minorSection');
+            if (age < 18) {
+                minorSection.style.display = 'block';
+            } else {
+                minorSection.style.display = 'none';
+            }
+        });
+
+        // Show/hide women section based on sex
+        document.querySelectorAll('input[name="Sex"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const womenSection = document.getElementById('womenSection');
+                if (this.value === 'Female') {
+                    womenSection.style.display = 'block';
+                } else {
+                    womenSection.style.display = 'none';
+                }
+            });
+        });
+
+        // Initialize conditional fields visibility on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check current age and show/hide minor section
+            const birthDateInput = document.querySelector('input[name="BirthDate"]');
+            if (birthDateInput.value) {
+                const birthDate = new Date(birthDateInput.value);
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+                
+                const minorSection = document.getElementById('minorSection');
+                minorSection.style.display = age < 18 ? 'block' : 'none';
+            }
+            
+            // Style for conditional fields
+            document.querySelectorAll('.conditional-field').forEach(field => {
+                field.style.transition = 'all 0.3s ease';
+                field.style.padding = '12px';
+                field.style.marginTop = '8px';
+            });
+
+            // Enhanced checkbox styling on check
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                const label = checkbox.parentElement;
+                if (checkbox.checked) {
+                    label.style.borderColor = 'var(--primary)';
+                    label.style.background = 'linear-gradient(135deg, rgba(184, 215, 168, 0.12) 0%, rgba(184, 215, 168, 0.06) 100%)';
+                }
+                
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        label.style.borderColor = 'var(--primary)';
+                        label.style.background = 'linear-gradient(135deg, rgba(184, 215, 168, 0.12) 0%, rgba(184, 215, 168, 0.06) 100%)';
+                    } else {
+                        label.style.borderColor = 'var(--gray-200)';
+                        label.style.background = 'white';
+                    }
+                });
+            });
+        });
+    </script>
 }

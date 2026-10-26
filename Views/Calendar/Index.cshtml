@@ -1,12 +1,14 @@
-﻿@{
-    ViewData["Title"] = "Calendar";
-    var appointments = ViewBag.Appointments as List<LuxeSmilesDental.Models.Appointment> ?? new List<LuxeSmilesDental.Models.Appointment>();
-    int displayYear = ViewBag.DisplayYear ?? DateTime.Now.Year;
-    int displayMonth = ViewBag.DisplayMonth ?? DateTime.Now.Month;
-    string monthName = ViewBag.MonthName ?? DateTime.Now.ToString("MMMM");
-    var firstDay = new DateTime(displayYear, displayMonth, 1);
-    var daysInMonth = DateTime.DaysInMonth(displayYear, displayMonth);
-    var startDayOfWeek = (int)firstDay.DayOfWeek;
+﻿﻿@{
+ViewData["Title"] = "Calendar";
+var appointments = ViewBag.Appointments as List<LuxeSmilesDental.Models.Appointment> ?? new List<LuxeSmilesDental.Models.Appointment>();
+var dentists = ViewBag.Dentists as List<LuxeSmilesDental.Models.User> ?? new List<LuxeSmilesDental.Models.User>();
+var patients = ViewBag.Patients as List<LuxeSmilesDental.Models.Patient> ?? new List<LuxeSmilesDental.Models.Patient>();
+int displayYear = ViewBag.DisplayYear ?? DateTime.Now.Year;
+int displayMonth = ViewBag.DisplayMonth ?? DateTime.Now.Month;
+string monthName = ViewBag.MonthName ?? DateTime.Now.ToString("MMMM");
+var firstDay = new DateTime(displayYear, displayMonth, 1);
+var daysInMonth = DateTime.DaysInMonth(displayYear, displayMonth);
+var startDayOfWeek = (int)firstDay.DayOfWeek;
 }
 
 <div class="calendar-container">
@@ -45,26 +47,16 @@
             var dayAppointments = appointments.Where(a => a.AppointmentDate.Date == currentDate.Date).ToList();
             var hasAppointments = dayAppointments.Any();
 
-            <div class="calendar-day @(hasAppointments ? "has-appointments" : "")">
+            <a href="@Url.Action("DayDetails", "Calendar", new { date = currentDate.ToString("yyyy-MM-dd") })"
+               class="calendar-day @(hasAppointments ? "has-appointments" : "")"
+               style="text-decoration: none; color: inherit; display: block;">
                 <div class="day-number">@day</div>
                 @if (hasAppointments)
                 {
                     <div class="appointment-count">@dayAppointments.Count appointment(s)</div>
-                    <button class="detail-btn" onclick="showDayDetails('@currentDate.ToString("yyyy-MM-dd")')">View</button>
                 }
-                else
-                {
-                    <button class="detail-btn" onclick="showAddAppointmentForDate('@currentDate.ToString("yyyy-MM-dd")')">Add</button>
-                }
-            </div>
+            </a>
         }
-    </div>
-
-    <div class="legend">
-        <div class="legend-item">
-            <div style="width: 20px; height: 20px; background: #e8f5e9; border-radius: 4px; border: 1px solid #b8d7a8;"></div>
-            <span>Has Appointments</span>
-        </div>
     </div>
 </div>
 
@@ -75,18 +67,39 @@
         <h2 id="modalTitle">Add Appointment</h2>
         <form id="appointmentForm">
             <input type="hidden" id="appointmentId" />
+
             <div class="form-group">
-                <label>Patient Name</label>
-                <input type="text" id="patientName" required />
+                <label>Patient <span style="color: red;">*</span></label>
+                <select id="patientId" required class="form-select">
+                    <option value="">-- Select Patient --</option>
+                    @foreach (var patient in patients)
+                    {
+                        <option value="@patient.PatientId">@patient.FirstName @patient.LastName</option>
+                    }
+                </select>
             </div>
+
             <div class="form-group">
-                <label>Appointment Date & Time</label>
+                <label>Dentist <span style="color: red;">*</span></label>
+                <select id="dentistId" required class="form-select">
+                    <option value="">-- Select Dentist --</option>
+                    @foreach (var dentist in dentists)
+                    {
+                        <option value="@dentist.UserId">@dentist.EmployeeName</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Appointment Date & Time <span style="color: red;">*</span></label>
                 <input type="datetime-local" id="appointmentDate" required />
             </div>
+
             <div class="form-group">
                 <label>Notes</label>
                 <textarea id="notes" rows="3"></textarea>
             </div>
+
             <button type="submit" class="btn-primary">Save</button>
         </form>
     </div>
@@ -101,180 +114,232 @@
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        var appointments = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(appointments.Select(a => new
-            {
+@Html.AntiForgeryToken()
+
+<script src="~/js/calendar.js"></script>
+
+<script>
+    var appointments = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(appointments.Select(a => new
+        {
                 appointmentId = a.AppointmentId,
+                patientId = a.PatientId,
                 patientName = a.PatientName,
+                dentistId = a.DentistId,
+                dentistName = a.Dentist?.EmployeeName,
                 appointmentDate = a.AppointmentDate.ToString("yyyy-MM-ddTHH:mm"),
                 notes = a.Notes
-            })));
+        })));
 
-        function showAddAppointmentModal() {
-            document.getElementById('appointmentModal').style.display = 'block';
-            document.getElementById('modalTitle').textContent = 'Add Appointment';
-            document.getElementById('appointmentForm').reset();
-            document.getElementById('appointmentId').value = '';
+    var dentists = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(dentists.Select(d => new
+        {
+                userId = d.UserId,
+                employeeName = d.EmployeeName
+        })));
+
+    var patients = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(patients.Select(p => new
+        {
+                patientId = p.PatientId,
+                fullName = p.FirstName + " " + p.LastName
+        })));
+
+    function showAddAppointmentModal() {
+        document.getElementById('appointmentModal').style.display = 'block';
+        document.getElementById('modalTitle').textContent = 'Add Appointment';
+        document.getElementById('appointmentForm').reset();
+        document.getElementById('appointmentId').value = '';
+    }
+
+    function closeAppointmentModal() {
+        document.getElementById('appointmentModal').style.display = 'none';
+    }
+
+    function closeDayDetailsModal() {
+        document.getElementById('dayDetailsModal').style.display = 'none';
+    }
+
+    document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        var appointmentId = document.getElementById('appointmentId').value;
+        var patientId = document.getElementById('patientId').value;
+        var dentistId = document.getElementById('dentistId').value;
+
+        // Validation
+        if (!patientId || patientId === '') {
+            alert('Please select a patient');
+            return;
         }
 
-        function showAddAppointmentForDate(date) {
-            showAddAppointmentModal();
-            document.getElementById('appointmentDate').value = date + 'T09:00';
+        if (!dentistId || dentistId === '') {
+            alert('Please select a dentist');
+            return;
         }
 
-        function closeAppointmentModal() {
-            document.getElementById('appointmentModal').style.display = 'none';
-        }
+        var data = {
+            appointmentId: appointmentId ? parseInt(appointmentId) : 0,
+            patientId: parseInt(patientId),
+            dentistId: parseInt(dentistId),
+            appointmentDate: document.getElementById('appointmentDate').value,
+            notes: document.getElementById('notes').value
+        };
 
-        function showDayDetails(date) {
-            var dayAppts = appointments.filter(a => a.appointmentDate.startsWith(date));
-            var content = '<table class="data-table"><thead><tr><th>Time</th><th>Patient</th><th>Notes</th><th>Actions</th></tr></thead><tbody>';
+        var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        var url = appointmentId ? '/Calendar/UpdateAppointment' : '/Calendar/CreateAppointment';
 
-            dayAppts.forEach(function(appt) {
-                var time = new Date(appt.appointmentDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                content += '<tr>';
-                content += '<td>' + time + '</td>';
-                content += '<td>' + (appt.patientName || 'N/A') + '</td>';
-                content += '<td>' + (appt.notes || 'N/A') + '</td>';
-                content += '<td>';
-                content += '<button class="icon-btn edit-btn" onclick="editAppointment(' + appt.appointmentId + ')">Edit</button>';
-                content += '<button class="icon-btn delete-btn" onclick="deleteAppointment(' + appt.appointmentId + ')">Delete</button>';
-                content += '</td></tr>';
-            });
-
-            content += '</tbody></table>';
-            document.getElementById('dayDetailsContent').innerHTML = content;
-            document.getElementById('dayDetailsTitle').textContent = 'Appointments for ' + new Date(date).toLocaleDateString();
-            document.getElementById('dayDetailsModal').style.display = 'block';
-        }
-
-        function closeDayDetailsModal() {
-            document.getElementById('dayDetailsModal').style.display = 'none';
-        }
-
-        document.getElementById('appointmentForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            var appointmentId = document.getElementById('appointmentId').value;
-            var data = {
-                appointmentId: appointmentId ? parseInt(appointmentId) : 0,
-                patientName: document.getElementById('patientName').value,
-                appointmentDate: document.getElementById('appointmentDate').value,
-                notes: document.getElementById('notes').value
-            };
-
-            var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-            var url = appointmentId ? '@Url.Action("UpdateAppointment", "Calendar")' : '@Url.Action("CreateAppointment", "Calendar")';
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': token
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Appointment saved');
-                    location.reload();
-                } else {
-                    alert('Error: ' + (data.message || 'Unknown error'));
-                }
-            })
-            .catch(() => alert('Network error'));
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Appointment saved successfully');
+                location.reload();
+            } else {
+                alert('Error: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Network error occurred');
         });
+    });
 
-        function editAppointment(id) {
-            var appt = appointments.find(a => a.appointmentId === id);
-            if (appt) {
-                document.getElementById('appointmentId').value = appt.appointmentId;
-                document.getElementById('patientName').value = appt.patientName;
-                document.getElementById('appointmentDate').value = appt.appointmentDate.substring(0, 16);
-                document.getElementById('notes').value = appt.notes || '';
-                document.getElementById('modalTitle').textContent = 'Edit Appointment';
-                closeDayDetailsModal();
-                document.getElementById('appointmentModal').style.display = 'block';
+    function editAppointment(id) {
+        var appt = appointments.find(a => a.appointmentId === id);
+        if (appt) {
+            document.getElementById('appointmentId').value = appt.appointmentId;
+            document.getElementById('patientId').value = appt.patientId || '';
+            document.getElementById('dentistId').value = appt.dentistId || '';
+            document.getElementById('appointmentDate').value = appt.appointmentDate.substring(0, 16);
+            document.getElementById('notes').value = appt.notes || '';
+            document.getElementById('modalTitle').textContent = 'Edit Appointment';
+            closeDayDetailsModal();
+            closeViewAppointmentModal();
+            document.getElementById('appointmentModal').style.display = 'block';
+        }
+    }
+
+    function deleteAppointment(id) {
+        if (!confirm('Are you sure you want to delete this appointment?')) return;
+
+        var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        fetch('/Calendar/DeleteAppointment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            },
+            body: JSON.stringify({ id: id })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Appointment deleted successfully');
+                location.reload();
+            } else {
+                alert('Error: ' + (data.message || 'Unknown error'));
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Network error occurred');
+        });
+    }
+
+    window.onclick = function(event) {
+        if (event.target.className === 'modal') {
+            event.target.style.display = 'none';
+        }
+    }
+</script>
+
+<style>
+    .form-select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        background-color: white;
+    }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
         }
 
-        function deleteAppointment(id) {
-            if (!confirm('Delete this appointment?')) return;
+    .icon-btn {
+        background: var(--gray-100, #f5f5f5);
+        border: 1px solid var(--gray-300, #e0e0e0);
+        min-width: 60px;
+        height: 32px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 200ms;
+        font-size: 11px;
+        padding: 0 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
 
-            var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-
-            fetch('@Url.Action("DeleteAppointment", "Calendar")', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': token
-                },
-                body: JSON.stringify({ id: id })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Appointment deleted');
-                    location.reload();
-                } else {
-                    alert('Error: ' + (data.message || 'Unknown error'));
-                }
-            })
-            .catch(() => alert('Network error'));
+        .icon-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        window.onclick = function(event) {
-            if (event.target.className === 'modal') {
-                event.target.style.display = 'none';
-            }
-        }
-    </script>
-    @Html.AntiForgeryToken()
+    .edit-btn {
+        background: #fff3e0;
+        border-color: #ff9800;
+        color: #f57c00;
+    }
 
-    <style>
-        .icon-btn {
-            background: var(--gray-100, #f5f5f5);
-            border: 1px solid var(--gray-300, #e0e0e0);
-            min-width: 60px;
-            height: 32px;
-            border-radius: 6px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 200ms;
-            font-size: 11px;
-            padding: 0 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
+        .edit-btn:hover {
+            background: #ffe0b2;
         }
 
-            .icon-btn:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }
+    .delete-btn {
+        background: #ffebee;
+        border-color: #f44336;
+        color: #d32f2f;
+    }
 
-        .edit-btn {
-            background: #fff3e0;
-            border-color: #ff9800;
-            color: #f57c00;
+        .delete-btn:hover {
+            background: #ffcdd2;
         }
 
-            .edit-btn:hover {
-                background: #ffe0b2;
-            }
+    .view-btn:hover {
+        background: #bbdefb !important;
+    }
 
-        .delete-btn {
-            background: #ffebee;
-            border-color: #f44336;
-            color: #d32f2f;
+    .appointment-details {
+        background: #f9f9f9;
+        padding: 20px;
+        border-radius: 8px;
+    }
+
+    .detail-row {
+        padding: 10px 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+        .detail-row:last-child {
+            border-bottom: none;
         }
 
-            .delete-btn:hover {
-                background: #ffcdd2;
-            }
-    </style>
-}
+        .detail-row strong {
+            display: inline-block;
+            width: 120px;
+            color: #666;
+        }
+</style>

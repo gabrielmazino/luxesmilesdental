@@ -1,3 +1,8 @@
+/* ============================================================================
+   LUXE SMILES DENTAL - LOGIN PAGE (VALIDATION FIX VERSION)
+   Professional, Polished, Modern Design with Proper Spacing
+   ============================================================================ */
+
 * {
     margin: 0;
     padding: 0;
@@ -5,9 +10,10 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     height: 100vh;
     overflow: hidden;
+    background: #fafafa;
 }
 
 .login-container {
@@ -15,128 +21,238 @@ body {
     height: 100vh;
 }
 
+/* ============================================================================
+   LOGIN FORM SECTION
+   ============================================================================ */
+
 .login-box {
     flex: 1;
     background: white;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 50px;
-    overflow-y: auto; /* Allow scrolling if content is too tall */
+    justify-content: center;
+    padding: 60px 40px;
+    overflow-y: auto;
 }
 
 .login-form-wrapper {
     width: 100%;
-    max-width: 450px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex-shrink: 0; /* Prevents form from shrinking */
+    max-width: 420px;
 }
 
 .login-box h1 {
-    font-size: 42px;
-    font-weight: 600;
-    margin-bottom: 40px;
-    color: #333;
-    width: 100%;
-    text-align: center;
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #212121;
+    letter-spacing: -0.5px;
 }
 
+.login-box .subtitle {
+    font-size: 16px;
+    color: #757575;
+    margin-bottom: 48px;
+    font-weight: 400;
+}
+
+/* Error Messages */
 .error-message {
-    background: #ffe6e6;
-    color: #d32f2f;
-    padding: 10px 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    width: 100%;
-    max-width: 450px;
+    background: #ffebee;
+    color: #c62828;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    border-left: 4px solid #d32f2f;
+    font-size: 14px;
+    line-height: 1.6;
 }
 
     .error-message ul {
         list-style: none;
+        margin: 0;
+        padding: 0;
     }
 
+    .error-message li {
+        margin: 4px 0;
+    }
+
+        .error-message li:before {
+            content: "• ";
+            color: #d32f2f;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+/* Form Styling */
 form {
     width: 100%;
-    max-width: 450px;
 }
+
+/* FIXED: Added proper spacing between form groups */
+.form-group {
+    margin-bottom: 28px; /* Increased from default for better spacing */
+}
+
+    .form-group label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #424242;
+        margin-bottom: 8px;
+        letter-spacing: 0.2px;
+    }
 
 .input-field {
     width: 100%;
-    padding: 18px 20px;
-    margin-bottom: 20px;
-    border: none;
-    background: #f5f5f5;
-    border-radius: 12px;
-    font-size: 16px;
-    color: #666;
-    transition: all 0.3s;
+    padding: 16px 18px;
+    border: 2px solid #e0e0e0;
+    background: #fafafa;
+    border-radius: 10px;
+    font-size: 15px;
+    color: #212121;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    margin-bottom: 0; /* Let form-group handle spacing */
 }
 
     .input-field:focus {
         outline: none;
-        background: #ebebeb;
+        background: white;
+        border-color: #b8d7a8; /* Match app primary color */
+        box-shadow: 0 0 0 3px rgba(184, 215, 168, 0.1);
     }
 
     .input-field::placeholder {
-        color: #999;
+        color: #9e9e9e;
     }
 
+/* Login Button */
 .login-btn {
     width: 100%;
     padding: 18px;
-    background: #b8d7a8;
+    background: linear-gradient(135deg, #b8d7a8 0%, #a5c797 100%); /* Match app theme */
     color: white;
     border: none;
-    border-radius: 12px;
-    font-size: 18px;
-    font-weight: 600;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s;
-    margin-top: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-top: 12px; /* Increased spacing above button */
+    box-shadow: 0 4px 12px rgba(184, 215, 168, 0.3);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 14px;
 }
 
     .login-btn:hover {
-        background: #a5c797;
+        background: linear-gradient(135deg, #a5c797 0%, #91c582 100%);
         transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(184, 215, 168, 0.4);
     }
 
+    .login-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(184, 215, 168, 0.3);
+    }
+
+/* FIXED: Decorative Image - Clean without box or outline */
 .dental-staff-image {
     width: 100%;
-    max-width: 700px;
-    margin-top: auto; /* This pushes the image to the bottom */
-    padding-top: 40px; /* Add space above the image - adjust this value to control position */
+    max-width: 500px;
+    margin-top: 48px;
+    /* FIXED: Removed all borders and shadows */
+    border: none;
+    background: none;
+    padding: 0;
 }
 
     .dental-staff-image img {
         width: 100%;
         height: auto;
-        border-radius: 12px;
+        border-radius: 16px;
+        /* FIXED: Clean image without any box/outline */
+        border: none;
+        box-shadow: none;
+        outline: none;
+        background: transparent;
+        display: block; /* Removes extra space below image */
     }
+
+/* ============================================================================
+   LOGO SECTION
+   ============================================================================ */
 
 .logo-section {
     flex: 1;
-    background: linear-gradient(135deg, #b8d7a8 0%, #a5d89a 100%);
+    background: linear-gradient(135deg, #b8d7a8 0%, #91c582 100%); /* Match app theme */
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+    /* Subtle pattern overlay */
+    .logo-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+    }
+
+.logo-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 40px;
 }
 
 .logo-image {
-    max-width: 80%;
-    max-height: 80%;
+    max-width: 85%;
+    max-height: 85vh;
     object-fit: contain;
+    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.1));
 }
 
-/* Legacy support for text logo - remove if not needed */
+/* Legacy support for text logo */
 .logo-text {
-    font-size: 120px;
-    font-weight: 700;
+    font-size: 96px;
+    font-weight: 800;
     color: white;
     text-align: center;
     line-height: 1.1;
-    text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.1);
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    letter-spacing: -2px;
+}
+
+.logo-tagline {
+    font-size: 20px;
+    color: rgba(255, 255, 255, 0.95);
+    margin-top: 16px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+
+@media (max-width: 1200px) {
+    .logo-section {
+        flex: 0.8;
+    }
+
+    .logo-text {
+        font-size: 80px;
+    }
 }
 
 @media (max-width: 1024px) {
@@ -146,5 +262,174 @@ form {
 
     .login-box {
         flex: 1;
+        justify-content: flex-start;
+        padding-top: 80px;
     }
+
+    .dental-staff-image {
+        max-width: 400px;
+        margin-top: 40px;
+    }
+}
+
+@media (max-width: 768px) {
+    .login-box {
+        padding: 60px 32px;
+    }
+
+        .login-box h1 {
+            font-size: 32px;
+        }
+
+        .login-box .subtitle {
+            font-size: 15px;
+            margin-bottom: 36px;
+        }
+
+    /* FIXED: Maintain spacing on mobile */
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .dental-staff-image {
+        max-width: 350px;
+        margin-top: 32px;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-box {
+        padding: 40px 24px;
+    }
+
+        .login-box h1 {
+            font-size: 28px;
+        }
+
+    /* FIXED: Maintain spacing even on small screens */
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .input-field {
+        padding: 14px 16px;
+        font-size: 14px;
+    }
+
+    .login-btn {
+        padding: 16px;
+        font-size: 13px;
+    }
+
+    .dental-staff-image {
+        display: none;
+    }
+}
+
+/* ============================================================================
+   ACCESSIBILITY IMPROVEMENTS
+   ============================================================================ */
+
+.input-field:focus-visible {
+    outline: 2px solid #b8d7a8;
+    outline-offset: 2px;
+}
+
+.login-btn:focus-visible {
+    outline: 2px solid #91c582;
+    outline-offset: 4px;
+}
+
+/* Screen reader only text */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* ============================================================================
+   LOADING STATE (Optional Enhancement)
+   ============================================================================ */
+
+.login-btn:disabled {
+    background: #e0e0e0;
+    color: #9e9e9e;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.login-btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+    .login-btn.loading::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        top: 50%;
+        left: 50%;
+        margin-left: -10px;
+        margin-top: -10px;
+        border: 2px solid white;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 0.6s linear infinite;
+    }
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================================================
+   POLISH & MICRO-INTERACTIONS
+   ============================================================================ */
+
+/* Smooth entrance animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login-form-wrapper {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.logo-content {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+/* ============================================================================
+   VISUAL CONSISTENCY WITH MAIN APP
+   ============================================================================ */
+
+/* Match the color palette from site.css */
+:root {
+    --primary: #b8d7a8;
+    --primary-dark: #a5c797;
+    --gray-800: #424242;
+    --gray-600: #757575;
+}
+
+/* Ensure consistent font smoothing */
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }

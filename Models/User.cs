@@ -23,7 +23,7 @@ namespace LuxeSmilesDental.Models
         public string Role { get; set; }
 
         [StringLength(20)]
-        public string ContactNumber { get; set; }
+        public string? ContactNumber { get; set; }
 
         public bool IsActive { get; set; } = true;
 

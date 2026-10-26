@@ -1,31 +1,34 @@
 // Program.cs
+// UPDATED FOR LAN / PHONE LOGIN TESTING
 // SECURITY FIXES:
-// 1. Added security headers
-// 2. Configured secure session cookies
-// 3. Added HTTPS enforcement
-// 4. Configured anti-forgery tokens
-// 5. Added CSP headers
-// 6. Disabled unnecessary features
+// 1. Security headers
+// 2. Configured secure session cookies for dev (LAN testing)
+// 3. Anti-forgery tokens configured for LAN
+// 4. Disabled HTTPS redirection for LAN testing
+// 5. CSP headers added
+// 6. Server header disabled
 
 using Microsoft.EntityFrameworkCore;
 using LuxeSmilesDental.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add MVC Controllers with Views
 builder.Services.AddControllersWithViews();
 
+// Database connection
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-// Configure secure session
+// Configure session (cookies)
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // HTTPS only
-    options.Cookie.SameSite = SameSiteMode.Strict; // CSRF protection
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // Works with HTTP and HTTPS
+    options.Cookie.SameSite = SameSiteMode.Lax; // Allows login from LAN
 });
 
 // Configure anti-forgery tokens
@@ -33,8 +36,8 @@ builder.Services.AddAntiforgery(options =>
 {
     options.HeaderName = "RequestVerificationToken";
     options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 builder.Services.AddHttpContextAccessor();
@@ -67,6 +70,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
+// Exception handling
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -74,19 +78,22 @@ if (!app.Environment.IsDevelopment())
 }
 else
 {
-    // Don't expose detailed errors in production
     app.UseDeveloperExceptionPage();
 }
 
-app.UseHttpsRedirection();
+// STATIC FILES WITH CACHE
 app.UseStaticFiles(new StaticFileOptions
 {
     OnPrepareResponse = ctx =>
     {
-        // Cache static files for performance
         ctx.Context.Response.Headers.Add("Cache-Control", "public,max-age=3600");
     }
 });
+
+// ------------------------
+// NOTE: HTTPS redirection disabled for LAN testing
+// ------------------------
+// app.UseHttpsRedirection();
 
 app.UseRouting();
 app.UseSession();

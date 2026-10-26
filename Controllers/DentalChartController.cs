@@ -37,6 +37,7 @@ namespace LuxeSmilesDental.Controllers
 
             ViewBag.PatientId = id;
             ViewBag.PatientName = patient.FullName;
+            ViewBag.CurrentDentist = HttpContext.Session.GetString("Username") ?? "Unknown";
 
             var previousCharts = await _context.DentalCharts
                 .Where(d => d.PatientId == id)
@@ -130,12 +131,63 @@ namespace LuxeSmilesDental.Controllers
                 _context.DentalCharts.Add(dentalChart);
                 await _context.SaveChangesAsync();
 
-                return Json(new { success = true, message = "Chart saved successfully" });
+                return Json(new { success = true, message = "Chart saved successfully", chartId = dentalChart.ChartId });
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Chart save error: {ex.Message}");
                 return Json(new { success = false, message = "An error occurred while saving" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SaveTreatmentRecords([FromBody] SaveTreatmentRecordsRequest request)
+        {
+            try
+            {
+                if (request == null || request.Treatments == null || !request.Treatments.Any())
+                {
+                    return Json(new { success = false, message = "No treatment records provided" });
+                }
+
+                // Validate that the chart exists
+                var firstChartId = request.Treatments.First().ChartId;
+                var chartExists = await _context.DentalCharts.AnyAsync(c => c.ChartId == firstChartId);
+
+                if (!chartExists)
+                {
+                    return Json(new { success = false, message = "Invalid chart ID" });
+                }
+
+                // Add all treatment records
+                foreach (var treatment in request.Treatments)
+                {
+                    var treatmentRecord = new TreatmentRecord
+                    {
+                        ChartId = treatment.ChartId,
+                        TreatmentDate = treatment.TreatmentDate,
+                        ToothNumbers = treatment.ToothNumbers,
+                        Procedure = treatment.Procedure,
+                        Remarks = treatment.Remarks,
+                        Dentist = treatment.Dentist,
+                        AmountCharged = treatment.AmountCharged,
+                        AmountPaid = treatment.AmountPaid,
+                        Balance = treatment.Balance,
+                        NextAppointment = treatment.NextAppointment,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    _context.TreatmentRecords.Add(treatmentRecord);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Treatment records saved successfully" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Treatment records save error: {ex.Message}");
+                return Json(new { success = false, message = "An error occurred while saving treatment records" });
             }
         }
 
@@ -170,25 +222,25 @@ namespace LuxeSmilesDental.Controllers
                 return NotFound();
             }
 
-            // Load chart with patient information
+            // Load chart with patient information and treatment records
             var chart = await _context.DentalCharts
-                .Where(d => d.ChartId == id)
-                .Select(d => new DentalChart
-                {
-                    ChartId = d.ChartId,
-                    PatientId = d.PatientId,
-                    ImagePath = d.ImagePath,
-                    VisitDate = d.VisitDate,
-                    CreatedBy = d.CreatedBy,
-                    CreatedAt = d.CreatedAt,
-                    Patient = d.Patient
-                })
-                .FirstOrDefaultAsync();
+                .Include(d => d.Patient)
+                .Include(d => d.TreatmentRecords)
+                .FirstOrDefaultAsync(d => d.ChartId == id);
 
             if (chart == null)
             {
                 return NotFound();
             }
+
+            // Get all charts for this patient for the history section
+            var chartHistory = await _context.DentalCharts
+                .Where(d => d.PatientId == chart.PatientId)
+                .OrderByDescending(d => d.VisitDate)
+                .Select(d => new { d.ChartId, d.VisitDate, d.CreatedBy, d.CreatedAt })
+                .ToListAsync();
+
+            ViewBag.ChartHistory = chartHistory;
 
             return View(chart);
         }
@@ -199,5 +251,24 @@ namespace LuxeSmilesDental.Controllers
         public int PatientId { get; set; }
         public string ImageData { get; set; }
         public DateTime VisitDate { get; set; }
+    }
+
+    public class SaveTreatmentRecordsRequest
+    {
+        public List<TreatmentRecordDto> Treatments { get; set; }
+    }
+
+    public class TreatmentRecordDto
+    {
+        public int ChartId { get; set; }
+        public DateTime TreatmentDate { get; set; }
+        public string ToothNumbers { get; set; }
+        public string Procedure { get; set; }
+        public string Remarks { get; set; }
+        public string Dentist { get; set; }
+        public decimal? AmountCharged { get; set; }
+        public decimal? AmountPaid { get; set; }
+        public decimal? Balance { get; set; }
+        public DateTime? NextAppointment { get; set; }
     }
 }

@@ -1,0 +1,39 @@
+﻿@model LuxeSmilesDental.Models.Patient
+@{
+    ViewData["Title"] = "Thank You!";
+    Layout = "~/Views/Shared/_LayoutPatientEntry.cshtml";
+}
+
+<div style="text-align: center; padding: 60px 40px;">
+    <div style="width: 120px; height: 120px; background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 40px; animation: scaleIn 0.6s ease;">
+        <span style="font-size: 70px; color: white; font-weight: bold;">✓</span>
+    </div>
+
+    <h1 style="color: #2e7d32; font-size: 42px; margin: 0 0 20px 0; font-weight: 700;">Thank You!</h1>
+    <p style="font-size: 28px; color: #b8d7a8; font-weight: 600; margin-bottom: 30px;">@Model.FullName</p>
+
+    <div style="background: #e8f5e9; padding: 30px; border-radius: 16px; margin: 40px 0; border-left: 6px solid #4caf50;">
+        <p style="margin: 0; font-weight: 600; color: #2e7d32; font-size: 20px;">
+            ✓ Your information has been successfully submitted!
+        </p>
+    </div>
+
+    <div style="background: #fff3e0; padding: 30px; border-radius: 16px; margin-top: 40px; border-left: 6px solid #ff9800;">
+        <p style="margin: 0; font-size: 18px; color: #e65100; font-weight: 600; line-height: 1.8;">
+            📋 Please return this device to our staff at the reception desk.<br />
+            They will review your information and assist you with the next steps.
+        </p>
+    </div>
+</div>
+
+<style>
+    @@keyframes scaleIn {
+        from {
+            transform: scale(0);
+        }
+
+        to {
+            transform: scale(1);
+        }
+    }
+</style>

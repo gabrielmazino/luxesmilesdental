@@ -1,7 +1,18 @@
-﻿function showAddAccountModal() {
-    document.getElementById('modalTitle').textContent = 'Add Account';
-    document.getElementById('userForm').reset();
+﻿// Helper function to get anti-forgery token
+function getAntiForgeryToken() {
+    const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+    return tokenInput ? tokenInput.value : '';
+}
+
+function showAddUserModal() {
+    document.getElementById('modalTitle').textContent = 'Add User';
     document.getElementById('userId').value = '';
+    document.getElementById('employeeName').value = '';
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    document.getElementById('role').value = 'Dentist';
+    document.getElementById('contactNumber').value = '';
+    document.getElementById('passwordGroup').style.display = 'block';
     document.getElementById('password').required = true;
     document.getElementById('passwordHint').style.display = 'none';
     document.getElementById('userModal').style.display = 'block';
@@ -13,41 +24,70 @@ function closeUserModal() {
 
 async function editUser(id) {
     try {
-        const response = await fetch(`/UserManagement/GetUser?id=${id}`);
-        const user = await response.json();
+        const response = await fetch('/UserManagement/GetUser?id=' + id);
 
-        document.getElementById('modalTitle').textContent = 'Edit Account';
-        document.getElementById('userId').value = user.userId;
-        document.getElementById('employeeName').value = user.employeeName;
-        document.getElementById('username').value = user.username;
+        if (!response.ok) {
+            throw new Error('HTTP error! status: ' + response.status);
+        }
+
+        const result = await response.json();
+
+        if (result.success === false) {
+            alert('Failed to load user: ' + (result.message || 'Unknown error'));
+            return;
+        }
+
+        const user = result.user || result;
+
+        // Support both PascalCase and camelCase responses
+        const userId = user.UserId || user.userId;
+        const empName = user.EmployeeName || user.employeeName;
+        const uname = user.Username || user.username;
+        const role = user.Role || user.role;
+        const contact = user.ContactNumber || user.contactNumber || '';
+
+        document.getElementById('modalTitle').textContent = 'Edit User';
+        document.getElementById('userId').value = userId;
+        document.getElementById('employeeName').value = empName;
+        document.getElementById('username').value = uname;
+        document.getElementById('role').value = role;
+        document.getElementById('contactNumber').value = contact;
+        // Show password field in edit too — leave blank to keep existing password
         document.getElementById('password').value = '';
         document.getElementById('password').required = false;
+        document.getElementById('passwordGroup').style.display = 'block';
         document.getElementById('passwordHint').style.display = 'block';
-        document.getElementById('role').value = user.role;
-        document.getElementById('contactNumber').value = user.contactNumber || '';
         document.getElementById('userModal').style.display = 'block';
+
     } catch (error) {
         alert('Error loading user: ' + error.message);
         console.error('Error:', error);
     }
 }
 
-async function toggleActive(userId) {
+async function toggleUserStatus(id) {
     try {
-        const response = await fetch('/UserManagement/ToggleActive', {
+        const token = getAntiForgeryToken();
+
+        const response = await fetch('/UserManagement/ToggleStatus', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
             },
-            body: `userId=${userId}`
+            body: 'id=' + id
         });
+
+        if (!response.ok) {
+            throw new Error('HTTP error! status: ' + response.status);
+        }
 
         const result = await response.json();
 
         if (result.success) {
             location.reload();
         } else {
-            alert('Failed to toggle user status');
+            alert('Failed to toggle user status: ' + (result.message || 'Unknown error'));
         }
     } catch (error) {
         alert('Error toggling user status: ' + error.message);
@@ -55,73 +95,77 @@ async function toggleActive(userId) {
     }
 }
 
-document.getElementById('userForm').addEventListener('submit', async function (e) {
+function handleFormSubmit(e) {
     e.preventDefault();
 
     const userId = document.getElementById('userId').value;
-    const employeeName = document.getElementById('employeeName').value;
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+    const employeeName = document.getElementById('employeeName').value.trim();
+    const username = document.getElementById('username').value.trim();
     const role = document.getElementById('role').value;
-    const contactNumber = document.getElementById('contactNumber').value;
+    const contactNumber = document.getElementById('contactNumber').value.trim();
+    const password = document.getElementById('password').value;
 
-    // Validate required fields
     if (!employeeName || !username || !role) {
         alert('Please fill in all required fields');
         return;
     }
 
-    // Check if password is required for new users
     if (!userId && !password) {
-        alert('Password is required for new accounts');
+        alert('Please enter a password for the new user');
         return;
     }
 
-    const action = userId ? 'EditAccount' : 'AddAccount';
+    const action = userId ? 'UpdateUser' : 'AddUser';
+    const token = getAntiForgeryToken();
 
     const params = new URLSearchParams();
-    if (userId) {
-        params.append('userId', userId);
-    }
+    if (userId) params.append('userId', userId);
     params.append('employeeName', employeeName);
     params.append('username', username);
-    if (password) {
+    params.append('role', role);
+    params.append('contactNumber', contactNumber);
+    // Send password for new users (required), or for updates only if filled in
+    if (!userId) {
+        params.append('password', password);
+    } else if (password) {
         params.append('password', password);
     }
-    params.append('role', role);
-    if (contactNumber) {
-        params.append('contactNumber', contactNumber);
-    }
 
-    try {
-        console.log('Sending request to:', `/UserManagement/${action}`);
-        console.log('Form data:', params.toString());
-
-        const response = await fetch(`/UserManagement/${action}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: params.toString()
+    fetch('/UserManagement/' + action, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'RequestVerificationToken': token
+        },
+        body: params.toString()
+    })
+        .then(function (response) {
+            if (!response.ok) throw new Error('HTTP error! status: ' + response.status);
+            return response.json();
+        })
+        .then(function (result) {
+            if (result.success) {
+                alert('User saved successfully');
+                location.reload();
+            } else {
+                alert('Failed to save user: ' + (result.message || 'Unknown error'));
+            }
+        })
+        .catch(function (error) {
+            alert('Error saving user: ' + error.message);
+            console.error('Error:', error);
         });
+}
 
-        const result = await response.json();
-        console.log('Response:', result);
-
-        if (result.success) {
-            location.reload();
-        } else {
-            alert('Failed to save user: ' + (result.message || 'Unknown error'));
-        }
-    } catch (error) {
-        alert('Error saving user: ' + error.message);
-        console.error('Error:', error);
-    }
-});
+// Attach form submit handler safely
+var form = document.getElementById('userForm');
+if (form) {
+    form.addEventListener('submit', handleFormSubmit);
+}
 
 window.onclick = function (event) {
-    const modal = document.getElementById('userModal');
-    if (event.target == modal) {
-        modal.style.display = "none";
+    var modal = document.getElementById('userModal');
+    if (modal && event.target === modal) {
+        modal.style.display = 'none';
     }
-}
+};

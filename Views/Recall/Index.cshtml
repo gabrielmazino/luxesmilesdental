@@ -23,6 +23,12 @@
                style="@(ViewBag.CurrentStatus == "Upcoming Recall" ? "background: #b8d7a8;" : "background: #e0e0e0; color: #666;")">
                 Upcoming
             </a>
+            @* ADDED SOON BUTTON *@
+            <a href="@Url.Action("Index", "Recall", new { status = "Soon" })"
+               class="btn-primary"
+               style="@(ViewBag.CurrentStatus == "Soon" ? "background: #b8d7a8;" : "background: #e0e0e0; color: #666;")">
+                Soon
+            </a>
             <a href="@Url.Action("Index", "Recall", new { status = "Recall Overdue" })"
                class="btn-primary"
                style="@(ViewBag.CurrentStatus == "Recall Overdue" ? "background: #b8d7a8;" : "background: #e0e0e0; color: #666;")">
@@ -50,7 +56,7 @@
                     @foreach (var item in Model)
                     {
                         var daysUntil = (item.RecallDate - DateTime.Today).Days;
-                        var rowStyle = item.Status == "Recall Overdue" ? "background: #ffe6e6;" : (daysUntil <= 7 ? "background: #fff9e6;" : "");
+                        var rowStyle = item.Status == "Recall Overdue" ? "background: #ffe6e6;" : (daysUntil >= 0 && daysUntil <= 7 ? "background: #fff9e6;" : "");
 
                         <tr style="@rowStyle">
                             <td>
@@ -60,14 +66,7 @@
                             </td>
                             <td>@item.RecallCase</td>
                             <td>
-                                @if (item.PreviousVisitDate.HasValue)
-                                {
-                                    @item.PreviousVisitDate.Value.ToString("MM/dd/yyyy")
-                                }
-                                else
-                                {
-                                    <span style="color: #999;">N/A</span>
-                                }
+                                @(item.PreviousVisitDate.HasValue? item.PreviousVisitDate.Value.ToString("MM/dd/yyyy") : "N/A")
                             </td>
                             <td>@item.RecallDate.ToString("MM/dd/yyyy")</td>
                             <td>
@@ -75,7 +74,7 @@
                                 {
                                     <span class="status-badge status-overdue">@item.Status</span>
                                 }
-                                else if (daysUntil <= 7)
+                                else if (daysUntil >= 0 && daysUntil <= 7)
                                 {
                                     <span class="status-badge status-upcoming">Due Soon</span>
                                 }
@@ -100,11 +99,11 @@
                             </td>
                             <td>
                                 <div style="display: flex; gap: 4px;">
-                                    <button class="icon-btn view-btn" onclick="window.location.href='@Url.Action("Details", "Recall", new { id = item.RecallId })'" title="View Details">View</button>
-                                    <button class="icon-btn edit-btn" onclick="window.location.href='@Url.Action("Edit", "Recall", new { id = item.RecallId })'" title="Edit">Edit</button>
+                                    <button class="icon-btn view-btn" onclick="window.location.href='@Url.Action("Details", "Recall", new { id = item.RecallId })'">View</button>
+                                    <button class="icon-btn edit-btn" onclick="window.location.href='@Url.Action("Edit", "Recall", new { id = item.RecallId })'">Edit</button>
                                     @if (canDelete)
                                     {
-                                        <button class="icon-btn delete-btn" onclick="if(confirm('Are you sure you want to delete this recall?')) window.location.href='@Url.Action("Delete", "Recall", new { id = item.RecallId })'" title="Delete">Delete</button>
+                                        <button class="icon-btn delete-btn" onclick="if(confirm('Are you sure?')) window.location.href='@Url.Action("Delete", "Recall", new { id = item.RecallId })'">Delete</button>
                                     }
                                 </div>
                             </td>
@@ -121,7 +120,7 @@
                             }
                             else
                             {
-                                <text>No @ViewBag.CurrentStatus recalls found.</text>
+                                <text>No @(ViewBag.CurrentStatus == "Soon" ? "recalls due soon" : ViewBag.CurrentStatus) found.</text>
                             }
                         </td>
                     </tr>
